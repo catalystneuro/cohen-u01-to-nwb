@@ -1,0 +1,37 @@
+NWBFile:
+  session_start_time: "2020-01-01T12:00:00"
+  session_description: "Fly is tracked with high speed camera and optogenetic stimulation is applied"
+Behavior:
+  wingL:
+    name: "left wing"
+    description: "Matrix containing all 3 left wing angles. Row1 = stroke, row2 = deviation, row3 = pitch."
+    unit: "degrees"
+  wingR:
+    name: "right wing"
+    description: "Matrix containing all 3 right wing angles. Row1 = stroke, row2 = deviation, row3 = pitch."
+    unit: "degrees"
+  bodyPitch:
+    name: "body pitch"
+    description: "Pitch angle of the body"
+    unit: "degrees"
+  bodyRoll:
+    name: "body roll"
+    description: "Roll angle of the body"
+    unit: "degrees"
+  bodyYaw:
+    name: "body yaw"
+    description: "Yaw angle of the body"
+    unit: "degrees"
+Ogen:
+  Device:
+    name: "Ogen stimulation device"
+    description: "Device used to stimulate the fly"
+    #manufacturer: # recommended
+    #model: # recommended
+  OgenSite:
+    name: "OptogeneticStimulusSite"
+    description: "Site of optogenetic stimulation"
+    excitation_lambda: "470 nm"
+    #location: # recommended
+
+
