@@ -29,10 +29,11 @@ Channel names:
 - LWingBeatAmp
 - RWingBeatAmp
 - WingBeatFreq
-- LHutchen
+- LHutchen  # What does Hutchen mean? Could be halteres?
 - RHutchen
 - PTrigger
 
+These can't be extracted with pyton from matlab because they are strings. Are they always the same order?
 
 ## Cameras 
 ### Fastec

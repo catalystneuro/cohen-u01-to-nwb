@@ -1,0 +1,20 @@
+NWBFile:
+  keywords:
+    - Fly
+    - Wingbeat
+    - Behavior
+  related_publications:
+    - https://doi.org/great_publication or link to APA or MLA citation of the publication
+  session_description:
+    A rich text description of the experiment. Can also just be the abstract of the publication.
+  experiment_description: 'Task: Rapid serial visual presentation (RSVP).'
+  institution:  Case Western Reserve University
+  lab: Fox
+  experimenter:
+    - Streets, Amy
+    - Lea, Kriss
+  surgery: TBD
+Subject:
+  sex: M
+  species: Drosophila melanogaster  # TODO: Figure this one out
+  description: fly
