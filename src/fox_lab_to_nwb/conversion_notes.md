@@ -4,6 +4,11 @@ Point-person: Amy Streets (axs2909@case.edu) and Kris Lea (kxl786@case.edu)
 
 https://sites.google.com/site/cwrufoxlab/people
 
+## Trial structure
+
+Organized with folder hierarchy, with one folder for all trials of a single type/cross containing individual trial folders (ex. \Tshx18D07\Tshx18D07_240124_115923_f3_r1 where the cross is Tsh x 18D07 lines, the individual trial folder is “cross” _ “date” _ “time” _ “fly number” _ “trial repeat number”).
+
+
 # DeepLabCut output files
 config files missing but Video and DLC output files are available
 

@@ -3,9 +3,11 @@ import time
 from datetime import datetime 
 from typing import Optional
 from zoneinfo import ZoneInfo
-from neuroconv.utils import dict_deep_update, load_dict_from_file
 
+import parse 
+from neuroconv.utils import dict_deep_update, load_dict_from_file
 from neuroconv import ConverterPipe
+
 from fox_lab_to_nwb.behavior import BehaviorInterface
 
 
@@ -17,12 +19,28 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
     if output_dir_path is None:
         output_dir_path = Path.home() / "conversion_nwb"
 
-    # session_id = f"{subject}_{session_date}_{session_time}"
-    session_id = "session"
+
+
+    # Parse metadta from the trial_data_folder name
+    # Define the correct parsing pattern
+    pattern = r"{cross}_{date}_{time}_f{fly_number}_r{trial_repeat_number}"
+    parsed_metadata = parse.parse(pattern, trial_data_folder.name)
+    
+    trial_repeat_number = parsed_metadata["trial_repeat_number"]
+    cross = parsed_metadata["cross"] # TODO, where in subject metadata should this be? Example Tshx18D07
+    fly_number = parsed_metadata["fly_number"]
+    session_date = parsed_metadata["date"]
+    session_time = parsed_metadata["time"]
+    
+    subject = f"Fly{fly_number}"    
+
+    session_id = f"{subject}_{session_date}_{session_time}"
     nwbfile_path = output_dir_path / f"{session_id}.nwb"
 
-    file_path = trial_data_folder / "Tshx18D07_240124_115923_f3_r1.fly2"
-    assert file_path.exists(), f"File {file_path} does not exist"
+    # Behavior interface
+    format = "fly2"  # Authors said in email this might change
+    daq_file_name = f"{cross}_{session_date}_{session_time}_f{fly_number}_r{trial_repeat_number}.{format}"
+    file_path = trial_data_folder / daq_file_name
     interface = BehaviorInterface(file_path=file_path)
 
     converter = ConverterPipe(data_interfaces={"behavior": interface})
@@ -30,7 +48,8 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
 
     # Add datetime to conversion
     metadata = converter.get_metadata()
-    session_start_time = datetime.now().astimezone(ZoneInfo("America/New_York"))
+    session_datetime = datetime.strptime(f"{session_date}_{session_time}", "%y%m%d_%H%M%S")
+    session_start_time = session_datetime.astimezone(ZoneInfo("America/New_York"))
     metadata["NWBFile"]["session_start_time"] = session_start_time
 
     # Update default metadata with the editable in the corresponding yaml file
