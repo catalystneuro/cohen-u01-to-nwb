@@ -61,13 +61,26 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
     file_path = trial_data_folder / back_camera_name
     back_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="BackCam")
 
+    # DLC interface
+
+    top_cam_dlc_file_name = "TOPCAM_000000DLC_resnet50_antennatrackingMar11shuffle1_100000.h5"
+
+    file_path = trial_data_folder / top_cam_dlc_file_name
+    top_cam_dlc_interface = DeepLabCutInterface(file_path=file_path)
+
+    back_cam_dlc_file_name = "XZ_1_186DLC_resnet50_haltereMar13shuffle1_100000.h5"
+    file_path = trial_data_folder / back_cam_dlc_file_name
+    back_cam_dlc_interface = DeepLabCutInterface(file_path=file_path)
+
     data_interface = {
-        "behavior": behavior_interface,
-        "side_cam": side_cam_interface,
-        "top_cam": top_cam_interface,
-        "back_cam": back_cam_interface,
+        "Behavior": behavior_interface,
+        "SideCam": side_cam_interface,
+        "TopCam": top_cam_interface,
+        "BackCam": back_cam_interface,
+        "DeepLabCutTopCam": top_cam_dlc_interface,
+        "DLCBackCamDlc": back_cam_dlc_interface,
     }
-    
+
     converter = ConverterPipe(data_interfaces=data_interface)
 
     # Add datetime to conversion
@@ -86,7 +99,11 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
     subject_metadata["subject_id"] = f"{subject}"
 
     # Run conversion, this adds the basic data to the NWBFile
-    conversion_options = {}
+    conversion_options = {
+        "DeepLabCutTopCam": {"container_name": "PoseEstimationTopCam"},
+        "DLCBackCamDlc": {"container_name": "PoseEstimationBackCam"},
+    }
+
     converter.run_conversion(
         metadata=metadata,
         nwbfile_path=nwbfile_path,
