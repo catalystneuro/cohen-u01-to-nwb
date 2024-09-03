@@ -1,12 +1,13 @@
 from pathlib import Path
 import time
-from datetime import datetime 
+from datetime import datetime
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-import parse 
+import parse
 from neuroconv.utils import dict_deep_update, load_dict_from_file
 from neuroconv import ConverterPipe
+from neuroconv.datainterfaces import DeepLabCutInterface, VideoInterface
 
 from fox_lab_to_nwb.behavior import BehaviorInterface
 
@@ -19,20 +20,18 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
     if output_dir_path is None:
         output_dir_path = Path.home() / "conversion_nwb"
 
-
-
     # Parse metadta from the trial_data_folder name
     # Define the correct parsing pattern
     pattern = r"{cross}_{date}_{time}_f{fly_number}_r{trial_repeat_number}"
     parsed_metadata = parse.parse(pattern, trial_data_folder.name)
-    
+
     trial_repeat_number = parsed_metadata["trial_repeat_number"]
-    cross = parsed_metadata["cross"] # TODO, where in subject metadata should this be? Example Tshx18D07
+    cross = parsed_metadata["cross"]  # TODO, where in subject metadata should this be? Example Tshx18D07
     fly_number = parsed_metadata["fly_number"]
     session_date = parsed_metadata["date"]
     session_time = parsed_metadata["time"]
-    
-    subject = f"Fly{fly_number}"    
+
+    subject = f"Fly{fly_number}"
 
     session_id = f"{subject}_{session_date}_{session_time}"
     nwbfile_path = output_dir_path / f"{session_id}.nwb"
@@ -41,10 +40,35 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
     format = "fly2"  # Authors said in email this might change
     daq_file_name = f"{cross}_{session_date}_{session_time}_f{fly_number}_r{trial_repeat_number}.{format}"
     file_path = trial_data_folder / daq_file_name
-    interface = BehaviorInterface(file_path=file_path)
+    behavior_interface = BehaviorInterface(file_path=file_path)
 
-    converter = ConverterPipe(data_interfaces={"behavior": interface})
+    # Video Interface
+    # TODO: are the names of the video files always the same per trial? we need
+    # More trials to find out
 
+    side_cam_name = "SideCam_000000.avi"
+    file_path = trial_data_folder / side_cam_name
+    side_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="SideCam")
+
+    top_camera_name = "TOPCAM_000000.avi"
+    file_path = trial_data_folder / top_camera_name
+
+    top_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="TopCam")
+
+    # TODO: this is my name, see how authors refer to this camera
+    back_camera_name = "XZ_1_186.mp4"
+
+    file_path = trial_data_folder / back_camera_name
+    back_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="BackCam")
+
+    data_interface = {
+        "behavior": behavior_interface,
+        "side_cam": side_cam_interface,
+        "top_cam": top_cam_interface,
+        "back_cam": back_cam_interface,
+    }
+    
+    converter = ConverterPipe(data_interfaces=data_interface)
 
     # Add datetime to conversion
     metadata = converter.get_metadata()

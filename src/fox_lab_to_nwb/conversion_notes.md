@@ -12,6 +12,60 @@ Organized with folder hierarchy, with one folder for all trials of a single type
 # DeepLabCut output files
 config files missing but Video and DLC output files are available
 
+### Pickle (metadata)
+
+Here is an example output:
+
+```
+{'data': {'start': 1710281222.2714453,
+  'stop': 1710281243.7364442,
+  'run_duration': 21.464998960494995,
+  'Scorer': 'DLC_resnet50_antennatrackingMar11shuffle1_100000',
+  'DLC-model-config file': {'stride': 8.0,
+   'weigh_part_predictions': False,
+   'weigh_negatives': False,
+   'fg_fraction': 0.25,
+   'mean_pixel': [123.68, 116.779, 103.939],
+   'shuffle': True,
+   'snapshot_prefix': 'C:\\Users\\FoxLab-Whiskey\\Desktop\\antennatracking-AMS-2024-03-11\\dlc-models\\iteration-0\\antennatrackingMar11-trainset95shuffle1\\test\\snapshot',
+   'log_dir': 'log',
+   'global_scale': 0.8,
+   'location_refinement': True,
+   'locref_stdev': 7.2801,
+   'locref_loss_weight': 1.0,
+   'locref_huber_loss': True,
+   'optimizer': 'sgd',
+   'intermediate_supervision': False,
+   'intermediate_supervision_layer': 12,
+   'regularize': False,
+   'weight_decay': 0.0001,
+   'crop_pad': 0,
+   'scoremap_dir': 'test',
+   'batch_size': 8,
+   'dataset_type': 'imgaug',
+   'deterministic': False,
+   'mirror': False,
+   'pairwise_huber_loss': True,
+   'weigh_only_present_joints': False,
+   'partaffinityfield_predict': False,
+   'pairwise_predict': False,
+   'all_joints': [[0], [1], [2], [3]],
+   'all_joints_names': ['L_ant', 'R_ant', 'L_base', 'R_base'],
+   'dataset': 'training-datasets\\iteration-0\\UnaugmentedDataSet_antennatrackingMar11\\antennatracking_AMS95shuffle1.mat',
+   'init_weights': 'C:/Users/FoxLab-Whiskey/Desktop/antennatracking-AMS-2024-03-11\\dlc-models\\iteration-0\\antennatrackingMar11-trainset95shuffle1\\train\\snapshot-100000',
+   'net_type': 'resnet_50',
+   'num_joints': 4,
+   'num_outputs': 1},
+  'fps': 30.0,
+  'batch_size': 8,
+  'frame_dimensions': (480, 640),
+  'nframes': 4351,
+  'iteration (active-learning)': 0,
+  'training set fraction': 0.95,
+  'cropping': False,
+  'cropping_parameters': [0, 640, 0, 480]}}
+```
+
 # Static TIFF files for confocal imaging
 Not yet available
 
@@ -41,6 +95,7 @@ Channel names:
 These can't be extracted with pyton from matlab because they are strings. Are they always the same order?
 
 ## Cameras 
+
 ### Fastec
 
 Files:
@@ -77,6 +132,13 @@ Not sure about this. The `.mii` metadata is not available and there is this extr
 
 
 It also does not have a corresponding DLC analysis
+
+### Graphical example for the trials
+![example](./assets/camera_views.png)
+
+See the example, we have SideCam, TopCam and XZ_1_186.mp4
+
+The other vide is  Tshx18D07_240124_115923_f3_r1_down20.mp4 which I guess was downsampled.
 
 
 ## `Tshx18D07_f3_r1_trial.Tsh`
