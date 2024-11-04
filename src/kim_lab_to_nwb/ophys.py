@@ -8,7 +8,7 @@ from roiextractors.extraction_tools import PathType
 from tifffile import TiffFile
 from tqdm import tqdm
 
-from ..utils import match_paths
+from cohen_u01_nwb_conversion_utils.utils import match_paths
 
 
 class MultiTiffMultiPageTiffImagingExtractor(ImagingExtractor):

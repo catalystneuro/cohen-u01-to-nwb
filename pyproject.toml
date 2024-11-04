@@ -17,14 +17,16 @@ classifiers = [
 dependencies = [
   "neuroconv[video]",
   "nwbinspector",
-  #"roiextractors",
+  "roiextractors",
+  "tifffile",
+  "pymatreader",
 ]
 
 [project.urls]
 Repository="https://github.com/catalystneuro/cohen-lab-to-nwb"
 
 [build-system]
-requires = ["setuptools>=58.0.0", "wheel"]
+requires = ["setuptools>=64.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
