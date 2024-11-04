@@ -1,15 +1,12 @@
-import os
 from datetime import datetime
 from pathlib import Path
 import uuid
 
-import h5py
 import numpy as np
 from neuroconv.tools.nwb_helpers import get_default_backend_configuration, configure_backend
 from neuroconv.datainterfaces import VideoInterface
 from pynwb import NWBFile, TimeSeries, NWBHDF5IO
 from pynwb.file import Subject
-from tqdm import tqdm
 from pymatreader import read_mat
 
 from kim_lab_to_nwb.ophys import MultiTiffMultiPageTiffImagingInterface
@@ -23,7 +20,7 @@ def convert_session_to_nwb(
     tiff_folder_path: str | Path,
     output_dir: str | Path,
     verbose: bool = False,
-) -> str:
+) -> Path:
     """
     Convert a single experimental session from Kim Lab data to NWB format.
 
@@ -44,7 +41,7 @@ def convert_session_to_nwb(
     
     Returns
     -------
-    str
+    Path
         Path to the created NWB file
     
     Raises
@@ -189,7 +186,7 @@ if __name__ == "__main__":
 
     output_dir.mkdir(exist_ok=True, parents=True)
     
-    output_file = convert_session_to_nwb(
+    nwbfile_path = convert_session_to_nwb(
         matlab_data_file_path=matlab_data_file_path,
         video_file_path=video_file_path,
         experiment_info_file_path=experiment_info_file_path,
