@@ -22,7 +22,7 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
 
     # Parse metadta from the trial_data_folder name
     # Define the correct parsing pattern
-    pattern = r"{cross}_{date}_{time}_f{fly_number}_r{trial_repeat_number}"
+    pattern = r"{cross}_{date:%y%m%d}_{time}_f{fly_number}_r{trial_repeat_number}"
     parsed_metadata = parse.parse(pattern, trial_data_folder.name)
 
     trial_repeat_number = parsed_metadata["trial_repeat_number"]
