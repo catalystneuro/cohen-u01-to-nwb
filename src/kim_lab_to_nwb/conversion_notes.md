@@ -13,10 +13,15 @@
 # data(8,:) indicates the start of a stimulus (it is empty in this example)
 
 # Questions for the meeting on 2024-11-06
+* How is the data in the matlab aquired? which DAQ?
 * The data that you shared with us? is this associated with a paper? is this something you are interested on sharing on dandi? What are the expectations of the code 
+No paper, what they want is some flexible set of routines that they can upload to DANDI.
 * The tiff format, what kind of microscope is it? Scanimage? If you could send me the model that would be useful.
+The microscope is self-made but for data acquisition they use Scanimage. They will send some metadata.
 * How is the stimuli presented? That is, I have two images, are they presented on time?`
-
+Those are images, a new dataset with the stimuli will be send to us.
+* How to synchronize the Videos, we should be aligned, we are dtecting crossin a threshold for hits.
+They are synchronized using the data in the DAQ.
 
 The data from the stimuli looks like this:
 
@@ -49,5 +54,6 @@ x_cor: shape =(17, 3)
 y_cor: shape=(17, 3)
 ```
 
-What are the three things, vertices? 
+What are the three things, vertices? So the ROIs are triangles.
+                                                                                                                                                                                                                                                                                              
 
