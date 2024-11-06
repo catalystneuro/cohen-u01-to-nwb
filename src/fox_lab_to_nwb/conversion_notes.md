@@ -4,10 +4,28 @@ Point-person: Amy Streets (axs2909@case.edu) and Kris Lea (kxl786@case.edu)
 
 https://sites.google.com/site/cwrufoxlab/people
 
+Paper is still not out, but according to the authors it should be similar to this one:
+
+https://www.biorxiv.org/content/10.1101/2024.03.13.583703v1
+
+The data is available here:
+
+
+
 ## Trial structure
 
-Organized with folder hierarchy, with one folder for all trials of a single type/cross containing individual trial folders (ex. \Tshx18D07\Tshx18D07_240124_115923_f3_r1 where the cross is Tsh x 18D07 lines, the individual trial folder is “cross” _ “date” _ “time” _ “fly number” _ “trial repeat number”).
+Folder name:
+- Tshx18D07_240124_115923_f3_r1
 
+Info here:
+Tshx18D07 = cross
+240124 = date
+115923 = time
+f3 = fly number
+r1 = trial repeat number
+
+
+Organized with folder hierarchy, with one folder for all trials of a single type/cross containing individual trial folders (ex. \Tshx18D07\Tshx18D07_240124_115923_f3_r1 where the 
 
 # DeepLabCut output files
 config files missing but Video and DLC output files are available
@@ -81,16 +99,17 @@ Not yet available
 ### Tshx18D07_240124_115923_f3_r1.fly2
 This is supposed to be a struct with DAQ data and the wingbeat analysis. Can't open it with matlab online unless extension is changed to .mat
 
-Channel names:
+  Channel names:
 - CamSync
 - CamTrigger
 - OptoTrigger
 - LWingBeatAmp
 - RWingBeatAmp
 - WingBeatFreq
-- LHutchen  # What does Hutchen mean? Could be halteres?
+- LHutchen  
 - RHutchen
 - PTrigger
+- WindTrigger
 
 These can't be extracted with pyton from matlab because they are strings. Are they always the same order?
 

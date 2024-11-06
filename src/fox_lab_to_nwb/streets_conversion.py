@@ -12,7 +12,7 @@ from neuroconv.datainterfaces import DeepLabCutInterface, VideoInterface
 from fox_lab_to_nwb.behavior import BehaviorInterface
 
 
-def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path] = None, verbose: bool = True):
+def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path] = None, verbose: bool = True):
 
     if verbose:
         start_time = time.time()
@@ -20,10 +20,10 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
     if output_dir_path is None:
         output_dir_path = Path.home() / "conversion_nwb"
 
-    # Parse metadta from the trial_data_folder name
+    # Parse metadta from the trial_folder_path name
     # Define the correct parsing pattern
     pattern = r"{cross}_{date}_{time}_f{fly_number}_r{trial_repeat_number}"
-    parsed_metadata = parse.parse(pattern, trial_data_folder.name)
+    parsed_metadata = parse.parse(pattern, trial_folder_path.name)
 
     trial_repeat_number = parsed_metadata["trial_repeat_number"]
     cross = parsed_metadata["cross"]  # TODO, where in subject metadata should this be? Example Tshx18D07
@@ -39,7 +39,7 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
     # Behavior interface
     format = "fly2"  # Authors said in email this might change
     daq_file_name = f"{cross}_{session_date}_{session_time}_f{fly_number}_r{trial_repeat_number}.{format}"
-    file_path = trial_data_folder / daq_file_name
+    file_path = trial_folder_path / daq_file_name
     behavior_interface = BehaviorInterface(file_path=file_path)
 
     # Video Interface
@@ -47,38 +47,35 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
     # More trials to find out
 
     side_cam_name = "SideCam_000000.avi"
-    file_path = trial_data_folder / side_cam_name
+    file_path = trial_folder_path / side_cam_name
     side_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="SideCam")
 
     top_camera_name = "TOPCAM_000000.avi"
-    file_path = trial_data_folder / top_camera_name
+    file_path = trial_folder_path / top_camera_name
 
     top_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="TopCam")
 
-    # TODO: this is my name, see how authors refer to this camera
-    back_camera_name = "XZ_1_186.mp4"
+    haltere_camera_name = "XZ_1_186.mp4"
 
-    file_path = trial_data_folder / back_camera_name
-    back_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="BackCam")
+    file_path = trial_folder_path / haltere_camera_name
+    haltere_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="BackCam")
 
     # DLC interface
-
     top_cam_dlc_file_name = "TOPCAM_000000DLC_resnet50_antennatrackingMar11shuffle1_100000.h5"
+    top_cam_file_path = trial_folder_path / top_cam_dlc_file_name
+    top_cam_dlc_interface = DeepLabCutInterface(file_path=top_cam_file_path)
 
-    file_path = trial_data_folder / top_cam_dlc_file_name
-    top_cam_dlc_interface = DeepLabCutInterface(file_path=file_path)
-
-    back_cam_dlc_file_name = "XZ_1_186DLC_resnet50_haltereMar13shuffle1_100000.h5"
-    file_path = trial_data_folder / back_cam_dlc_file_name
-    back_cam_dlc_interface = DeepLabCutInterface(file_path=file_path)
+    haltere_cam_dlc_file_name = "XZ_1_186DLC_resnet50_haltereMar13shuffle1_100000.h5"
+    halter_cam_file_path = trial_folder_path / haltere_cam_dlc_file_name
+    haltere_cam_dlc_interface = DeepLabCutInterface(file_path=halter_cam_file_path)
 
     data_interface = {
         "Behavior": behavior_interface,
         "SideCam": side_cam_interface,
         "TopCam": top_cam_interface,
-        "BackCam": back_cam_interface,
+        "BackCam": haltere_cam_interface,
         "DeepLabCutTopCam": top_cam_dlc_interface,
-        "DLCBackCamDlc": back_cam_dlc_interface,
+        "DeepLabCutHalterCam": haltere_cam_dlc_interface,
     }
 
     converter = ConverterPipe(data_interfaces=data_interface)
@@ -101,7 +98,7 @@ def run_trial_conversion(trial_data_folder: Path, output_dir_path: Optional[Path
     # Run conversion, this adds the basic data to the NWBFile
     conversion_options = {
         "DeepLabCutTopCam": {"container_name": "PoseEstimationTopCam"},
-        "DLCBackCamDlc": {"container_name": "PoseEstimationBackCam"},
+        "DeepLabCutHalterCam": {"container_name": "PoseEstimationHaltereCam"},
     }
 
     converter.run_conversion(
@@ -127,7 +124,7 @@ if __name__ == "__main__":
     verbose = True
     data_path = Path("/home/heberto/cohen_project/Sample data/Fox Lab")
     assert data_path.exists(), f"Folder {data_path} does not exist"
-    trial_data_folder = data_path / "Tshx18D07_240124_115923_f3_r1"
-    assert trial_data_folder.exists(), f"Folder {trial_data_folder} does not exist"
+    trial_folder_path = data_path / "Tshx18D07_240124_115923_f3_r1"
+    assert trial_folder_path.exists(), f"Folder {trial_folder_path} does not exist"
 
-    run_trial_conversion(trial_data_folder=trial_data_folder, verbose=verbose)
+    run_trial_conversion(trial_folder_path=trial_folder_path, verbose=verbose)

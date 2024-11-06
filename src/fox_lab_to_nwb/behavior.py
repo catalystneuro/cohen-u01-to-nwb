@@ -19,8 +19,8 @@ class BehaviorInterface(BaseDataInterface):
     ) -> None:
 
         mat = read_mat(self.file_path)
-        rec_struct = mat["rec"]
-        daq_struct = rec_struct["daq"]
+        recording_structure = mat["rec"]
+        daq_struct = recording_structure["daq"]
 
         timestamps = daq_struct["tstamps"]
 

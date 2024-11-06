@@ -13,8 +13,9 @@ NWBFile:
   experimenter:
     - Streets, Amy
     - Lea, Kriss
+    - Fox, Jessica
   surgery: TBD
 Subject:
-  sex: M
-  species: Drosophila melanogaster  # TODO: Figure this one out
+  sex: F
+  species: Drosophila melanogaster
   description: fly
