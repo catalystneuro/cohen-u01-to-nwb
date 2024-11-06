@@ -10,7 +10,7 @@ from neuroconv.utils import FilePathType, DeepDict
 from roiextractors.extraction_tools import PathType
 from roiextractors.imagingextractor import ImagingExtractor
 
-from ..utils import match_paths
+from ..cohen_u01_utils.utils import match_paths
 
 
 def extract_experiment_details(xml_file_path: str):
