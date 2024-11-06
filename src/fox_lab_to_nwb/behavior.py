@@ -33,7 +33,7 @@ class BehaviorInterface(BaseDataInterface):
             "LWingBeatAmp",
             "RWingBeatAmp",
             "WingBeatFreq",
-            "LHutchen",
+            "LHutchen",  # hütchens means little hat and is the shape of the signal on the sensor
             "RHutchen",
             "PTrigger",
         ]
@@ -44,7 +44,7 @@ class BehaviorInterface(BaseDataInterface):
         wing_beat_frequency = daq_struct["data"][:, 5]
 
         unit = "tbd"
-        description = "tbd"
+        description = "Recorded by the WingBeat Analyzer, an LED directly overhead a photodiode that detects changes in light (i.e., changes in how much the fly’s wing is occluding the LED)"
         left_wing_beat_amplitude_time_series = TimeSeries(
             name="LeftWingBeatAmplitudeTimeSeries",
             data=left_wing_beat_amplitude,
@@ -53,7 +53,7 @@ class BehaviorInterface(BaseDataInterface):
             description=description,
         )
 
-        description = "tbd"
+        description = "Recorded by the WingBeat Analyzer, an LED directly overhead a photodiode that detects changes in light (i.e., changes in how much the fly’s wing is occluding the LED)"
         right_wing_beat_amplitude_time_series = TimeSeries(
             name="RightWingBeatAmplitudeTimeSeries",
             data=right_wing_beat_amplitude,
@@ -62,13 +62,14 @@ class BehaviorInterface(BaseDataInterface):
             description=description,
         )
 
-        description = "tbd"
-        unit = "Hz"  # TODO: Figure this out, the values in the plot are around 3 but should be higher for flies
+        description = "Recorded by the WingBeat Analyzer "
+        unit = "Hz"  # a normal Drosophila will flap between 180 and 220 Hz
         wing_beat_frequency_time_series = TimeSeries(
             name="WingBeatFrequencyTimeSeries",
             data=wing_beat_frequency,
             unit=unit,
             timestamps=timestamps,
+            conversion=0.1,
             description=description,
         )
 
@@ -76,28 +77,45 @@ class BehaviorInterface(BaseDataInterface):
         nwbfile.add_acquisition(right_wing_beat_amplitude_time_series)
         nwbfile.add_acquisition(wing_beat_frequency_time_series)
 
-        # TODO: Ask Ben if this nesting makes sense? probably not
-        # time_series = [left_wing_beat_amplitude_time_series, right_wing_beat_amplitude_time_series, wing_beat_frequency_time_series]
-        # behavioral_time_series_container = BehavioralTimeSeries(name="BehavioralTimeSeries", time_series=time_series)
-        # nwbfile.add_acquisition(behavioral_time_series_container)
 
-        # Not clear what are those signals, haltere?
+
+        # Hutchen is the shape of the signal on the sensor, means little hats
         lhutchen = daq_struct["data"][:, 6]
         rhutchen = daq_struct["data"][:, 7]
 
-        unit = "tbd"
-        description = "tbd"
-        lhutchen_time_series = TimeSeries(
-            name="LHutchenTimeSeries", data=lhutchen, unit=unit, timestamps=timestamps, description=description
+        unit = "arbitrary units or z-score"
+        lhutchen_description = (
+            "Voltage recording of the shadow of the fly’s left wingbeat. "
+            "Low voltages indicate the wing is fully extended forward (minimal light occlusion), "
+            "and high voltages indicate the wing is fully back (maximal light occlusion). "
+            "Voltage values depend on the fly’s positioning over the photodiode."
         )
 
-        description = "tbd"
-        rhutchen_time_series = TimeSeries(
-            name="RHutchenTimeSeries", data=rhutchen, unit=unit, timestamps=timestamps, description=description
+        rhutchen_description = (
+            "Voltage recording of the shadow of the fly’s right wingbeat. "
+            "Low voltages indicate the wing is fully extended forward (minimal light occlusion), "
+            "and high voltages indicate the wing is fully back (maximal light occlusion). "
+            "Voltage values depend on the fly’s positioning over the photodiode."
         )
 
-        nwbfile.add_acquisition(lhutchen_time_series)
-        nwbfile.add_acquisition(rhutchen_time_series)
+        # Updated object names and definitions
+        left_wing_voltage_series = TimeSeries(
+            name="LeftWingVoltageTimeSeries",
+            data=lhutchen,
+            unit=unit,
+            timestamps=timestamps,
+            description=lhutchen_description
+        )
+
+        right_wing_voltage_series = TimeSeries(
+            name="RightWingVoltageTimeSeries",
+            data=rhutchen,
+            unit=unit,
+            timestamps=timestamps,
+            description=rhutchen_description
+        )
+        nwbfile.add_acquisition(left_wing_voltage_series)
+        nwbfile.add_acquisition(right_wing_voltage_series)
 
     def extract_synchronization_signals_info(self):
 
@@ -107,7 +125,7 @@ class BehaviorInterface(BaseDataInterface):
 
         daq_sampling_rate = daq_struct["fs"]
 
-        cam_sync = daq_struct["data"][:, 0]
+        cam_sync = daq_struct["data"][:, 0]  # This is a defunct channel and not used according to authors
         cam_trigger = daq_struct["data"][:, 1]
         opto_trigger = daq_struct["data"][:, 2]
         ptrigger = daq_struct["data"][:, 8]
@@ -121,4 +139,3 @@ class BehaviorInterface(BaseDataInterface):
         }
 
         return return_dict
-    
