@@ -75,9 +75,30 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
 
     side_cam_interface.set_aligned_timestamps(aligned_timestamps=[fastec_timestamps])
     
-    top_camera_name = "TOPCAM_000000.avi"
-    file_path = trial_folder_path / top_camera_name
+    # For TopCam (similar to SideCam)
+    top_cam_name = "TOPCAM_000000.avi"
+    file_path = trial_folder_path / top_cam_name
     top_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="TopCam")
+
+    fastec_metadata_file_path = trial_folder_path / f"{file_path.stem}.txt"
+    fastec_metadata = extract_fastec_metadata(fastec_metadata_file_path)
+    fastec_total_frames = fastec_metadata["image"]["frame_count"]
+    fastec_framerate = fastec_metadata["record"]["fps"]
+
+    # Using the same camera trigger as SideCam since they use the same sync signal
+    cam_trigger = sync_info_dict["cam_trigger"]
+    fastec_trigger_index = np.where(cam_trigger > 3)[0][0]
+    fastec_trigger_time = fastec_trigger_index / daq_sampling_rate
+
+    # Create timestamps for TopCam
+    fastec_timestamps = np.linspace(1/fastec_framerate, 
+                                fastec_total_frames/fastec_framerate, 
+                                fastec_total_frames)
+    # Align to trigger time
+    fastec_timestamps = fastec_timestamps - (fastec_timestamps[-1] - fastec_trigger_time)
+
+    # Set the aligned timestamps for TopCam
+    top_cam_interface.set_aligned_timestamps(aligned_timestamps=[fastec_timestamps])
 
     haltere_camera_name = "XZ_1_186.mp4"
     file_path = trial_folder_path / haltere_camera_name
