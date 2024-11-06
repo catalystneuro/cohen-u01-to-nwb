@@ -66,8 +66,8 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
     top_cam_dlc_interface = DeepLabCutInterface(file_path=top_cam_file_path)
 
     haltere_cam_dlc_file_name = "XZ_1_186DLC_resnet50_haltereMar13shuffle1_100000.h5"
-    halter_cam_file_path = trial_folder_path / haltere_cam_dlc_file_name
-    haltere_cam_dlc_interface = DeepLabCutInterface(file_path=halter_cam_file_path)
+    haltere_cam_file_path = trial_folder_path / haltere_cam_dlc_file_name
+    haltere_cam_dlc_interface = DeepLabCutInterface(file_path=haltere_cam_file_path)
 
     data_interface = {
         "Behavior": behavior_interface,
@@ -75,7 +75,7 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
         "TopCam": top_cam_interface,
         "BackCam": haltere_cam_interface,
         "DeepLabCutTopCam": top_cam_dlc_interface,
-        "DeepLabCutHalterCam": haltere_cam_dlc_interface,
+        "DeepLabCutHaltereCam": haltere_cam_dlc_interface,
     }
 
     converter = ConverterPipe(data_interfaces=data_interface)
@@ -98,7 +98,7 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
     # Run conversion, this adds the basic data to the NWBFile
     conversion_options = {
         "DeepLabCutTopCam": {"container_name": "PoseEstimationTopCam"},
-        "DeepLabCutHalterCam": {"container_name": "PoseEstimationHaltereCam"},
+        "DeepLabCutHaltereCam": {"container_name": "PoseEstimationHaltereCam"},
     }
 
     converter.run_conversion(
