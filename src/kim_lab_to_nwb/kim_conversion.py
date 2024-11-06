@@ -176,7 +176,7 @@ def convert_session_to_nwb(
 if __name__ == "__main__":
     # Example usage with the original paths
     data_folder_path = Path("/Users/heberto/project_data/Sample data-selected/Kim Lab")
-    
+    data_folder_path = Path("/home/heberto/cohen_project/Sample data/Kim Lab")
     # Define input paths
     matlab_data_file_path = data_folder_path / "raw data" / "data_20240108b_00003.mat"
     video_file_path = data_folder_path / "raw data" / "20240108b_00003.avi"
