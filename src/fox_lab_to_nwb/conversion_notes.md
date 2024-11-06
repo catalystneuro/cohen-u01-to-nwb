@@ -94,6 +94,7 @@ Not yet available
 
 # Files on data shared 
 
+## DAQ
 ### Tshx18D07_240124_115923_f3_r1.fly2
 This is supposed to be a struct with DAQ data and the wingbeat analysis. Can't open it with matlab online unless extension is changed to .mat
 
@@ -110,6 +111,62 @@ This is supposed to be a struct with DAQ data and the wingbeat analysis. Can't o
 - WindTrigger
 
 These can't be extracted with pyton from matlab because they are strings. Are they always the same order?
+
+This explains how the data of the data of the DAQ can be interpreted:
+
+https://reiserlab.github.io/Modular-LED-Display/Generation%202/Arenas/docs/g2_user-guide.html#optical-wingbeat-analyzer
+
+
+A description of the DAQs fields given by the authors:
+
+**CamSync**
+- Defunct channel, not currently used
+
+**CamTrigger**
+- Trigger for Fastec IL5 high-speed cameras (pointed at the head, sampling at 2000 FPS)
+- Single trigger is split via BNC connector to reach both cameras simultaneously, then a copy of the signal is recorded by DAQ
+
+**OptoTrigger**
+- Trigger for optogenetic light
+- 625nm red wavelength, collimated light (ThorLabs)
+- Trace is recorded as voltage output to the optogenetic light. Higher voltage translates to higher light intensity (a variable within the experiment)
+- Power Driver (receives BNC input from DAQ): [ThorLabs Power Driver](https://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=2616)
+
+**LWingBeatAmp**
+- Recorded by the WingBeat Analyzer, an LED directly overhead a photodiode that detects changes in light (i.e., changes in how much the fly’s wing is occluding the LED)
+- Left wing only
+- Sampling at 10 kHz
+
+**RWingBeatAmp**
+- See above, but for the right wing
+- Sampling at 10 kHz
+
+**WingBeatFreq**
+- Recorded by the WingBeat Analyzer
+- Units in 1/10th Hz (a normal Drosophila will flap between 180 and 220 Hz)
+- Sampling at 10 kHz
+
+**LHutchen**
+- Voltage recording of the shadow of the fly’s wingbeat
+  - Low voltages correspond to when the fly’s wing is fully extended forward (minimal light from the overhead LED)
+  - High voltages correspond to when the fly’s wing is fully back (maximal light from the overhead LED, no occlusion by the wing)
+- Listed in arbitrary units or z-score when published, as the voltage will depend on how centered/far forward the fly is over the photodiode
+- Specific sensor for the left wing
+- Sampling at 10 kHz
+
+**RHutchen**
+- Voltage recording of the shadow of the fly’s wingbeat
+  - Low voltages correspond to when the fly’s wing is fully extended forward (minimal light from the overhead LED)
+  - High voltages correspond to when the fly’s wing is fully back (maximal light from the overhead LED, no occlusion by the wing)
+- Listed in arbitrary units or z-score when published, as the voltage will depend on how centered/far forward the fly is over the photodiode
+- Specific sensor for the right wing
+- Sampling at 10 kHz
+
+**PTrigger**
+- Trigger for Photron Fastcam Mini AX100 (pointed at the haltere, sampling at 10,000 FPS)
+- Single trigger is split via BNC connector to reach both cameras simultaneously, then a copy of the signal is recorded by DAQ
+
+Note that the triggers fire when the buffer of the camera should be emptied and therefore point out the end of the video camera signal. The DAQ is on for longer.
 
 ## Cameras 
 
