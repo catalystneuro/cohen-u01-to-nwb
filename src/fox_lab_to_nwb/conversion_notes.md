@@ -10,8 +10,6 @@ https://www.biorxiv.org/content/10.1101/2024.03.13.583703v1
 
 The data is available here:
 
-
-
 ## Trial structure
 
 Folder name:
@@ -85,10 +83,10 @@ Here is an example output:
 ```
 
 # Static TIFF files for confocal imaging
-Not yet available
+Those wont't be necessary
 
 # Synchronization signal with Spike2
-Not yet available
+They are using another system to synchronize the data. This is not available.
 
 # Intracellular electrophysiology data including the voltage trace and stimulus trace
 
@@ -131,6 +129,51 @@ bodyparts: L_ant, R_ant, L_base, R_base,
 
 Sidecam does not have DLC analysis
 
+The metadata as extracted from the txt files looks like this:
+
+```
+{'image': {'roi_x': 320,
+  'roi_y': 272,
+  'width': 640,
+  'height': 480,
+  'bit_mode': (10, 3),
+  'sensor_options': 'bin1x:subs1x',
+  'frame_count': 4351,
+  'trigger_frame': 4350,
+  'start_frame': 0,
+  'end_frame': 4350,
+  'time_stamp': '24:024:08:59:22.735044',
+  'comment': ''},
+ 'camera': {'make': 'FASTEC',
+  'model': 'IL5SM8256',
+  'fpga_rev': '0x00020014',
+  'software_version': '2.5.3',
+  'mac_address': 'a4:1b:c0:00:05:3b',
+  'camera_name': 'SideCam',
+  'sensor_type': 'M5LA'},
+ 'record': {'fps': 2000,
+  'shutter_speed': 100,
+  'multi_slope': (0, 0),
+  'trigger_setting': '100%',
+  'sync_in': '0x0',
+  'sync_out': '0x0'},
+ 'normalization': {'red_balance': 4096,
+  'blue_balance': 4096,
+  'green_balance': 4096,
+  'brightness': 100,
+  'contrast': 100,
+  'gamma': 100,
+  'sensor_gain': 100,
+  'red_gain': 0.0,
+  'blue_gain': 0.0,
+  'green_gain': 0.0,
+  'red_matrix': [4096, 0, 0],
+  'blue_matrix': [0, 0, 4096],
+  'green_matrix': [0, 4096, 0],
+  'raw': 0,
+  'codec': 'MJPEG'}}
+```
+
 ### Phantom
 Files:
 * XZ_1_186.mp4
@@ -140,6 +183,41 @@ Format is mp4, metadata is in xml
 This camera has an associated DLC analysis for the following body parts:
 
 bodyparts: haltere
+
+Example of metadata in the xml:
+
+```xml
+
+{'frame_rate': 4000.0,
+ 'total_frames': 7242,
+ 'first_frame': -7241,
+ 'image_count': 7242,
+ 'width': 512,
+ 'height': 384,
+ 'bit_depth': 8,
+ 'bit_depth_recording': 12,
+ 'camera_model': 'Phantom v7',
+ 'camera_version': 7,
+ 'firmware_version': 381,
+ 'software_version': 804,
+ 'serial': 6725,
+ 'shutter_ns': 240000,
+ 'frame_delay_ns': 0,
+ 'compression': 0,
+ 'saturation': -2.0,
+ 'brightness': 49,
+ 'contrast': -3,
+ 'gamma': -1.0,
+ 'trigger_frame': 0,
+ 'post_trigger': 1,
+ 'auto_exposure': True,
+ 'auto_exp_level': 80,
+ 'auto_exp_speed': 5,
+ 'trigger_time': 'Mon Jul 13 1970 15:31:51.504 832',
+ 'acquisition': {'pos_x': 0, 'pos_y': 0, 'width': 512, 'height': 384},
+ 'white_balance': {'red': 1.0, 'blue': 1.0}}
+ ```
+
 
 ### Photron
 
