@@ -38,13 +38,6 @@ class BehaviorInterface(BaseDataInterface):
             "PTrigger",
         ]
 
-        # TODO: figure how how to store this
-        # Synchronization signals
-        cam_sync = daq_struct["data"][:, 0]
-        cam_trigger = daq_struct["data"][:, 1]
-        opto_trigger = daq_struct["data"][:, 2]
-        ptrigger = daq_struct["data"][:, 8]
-
         # Behavior signals
         left_wing_beat_amplitude = daq_struct["data"][:, 3]
         right_wing_beat_amplitude = daq_struct["data"][:, 4]
@@ -105,3 +98,27 @@ class BehaviorInterface(BaseDataInterface):
 
         nwbfile.add_acquisition(lhutchen_time_series)
         nwbfile.add_acquisition(rhutchen_time_series)
+
+    def extract_synchronization_signals_info(self):
+
+        mat = read_mat(self.file_path)
+        recording_structure = mat["rec"]
+        daq_struct = recording_structure["daq"]
+
+        daq_sampling_rate = daq_struct["fs"]
+
+        cam_sync = daq_struct["data"][:, 0]
+        cam_trigger = daq_struct["data"][:, 1]
+        opto_trigger = daq_struct["data"][:, 2]
+        ptrigger = daq_struct["data"][:, 8]
+
+        return_dict = {
+            "daq_sampling_rate": daq_sampling_rate,
+            "cam_sync": cam_sync,
+            "cam_trigger": cam_trigger,
+            "opto_trigger": opto_trigger,
+            "ptrigger": ptrigger,
+        }
+
+        return return_dict
+    

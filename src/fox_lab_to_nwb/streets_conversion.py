@@ -8,8 +8,11 @@ import parse
 from neuroconv.utils import dict_deep_update, load_dict_from_file
 from neuroconv import ConverterPipe
 from neuroconv.datainterfaces import DeepLabCutInterface, VideoInterface
+import numpy as np 
 
 from fox_lab_to_nwb.behavior import BehaviorInterface
+from fox_lab_to_nwb.camera_utilites import extract_fastec_metadata, extract_phantom_metadata
+from ndx_pose import PoseEstimation, PoseEstimationSeries  # noqa: F401, this import is necessary for the conversion, until we fix things in neuroconv
 
 
 def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path] = None, verbose: bool = True):
@@ -37,30 +40,95 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
     nwbfile_path = output_dir_path / f"{session_id}.nwb"
 
     # Behavior interface
-    format = "fly2"  # Authors said in email this might change
+    format = "fly2"  # Authors said in email this might change, this is renamed matlab file
     daq_file_name = f"{cross}_{session_date}_{session_time}_f{fly_number}_r{trial_repeat_number}.{format}"
     file_path = trial_folder_path / daq_file_name
     behavior_interface = BehaviorInterface(file_path=file_path)
+    
+    sync_info_dict = behavior_interface.extract_synchronization_signals_info()
+    
+    daq_sampling_rate = sync_info_dict["daq_sampling_rate"]  
 
-    # Video Interface
-    # TODO: are the names of the video files always the same per trial? we need
-    # More trials to find out
-
+    #################
+    # Video Interfaces
+    ##################
     side_cam_name = "SideCam_000000.avi"
     file_path = trial_folder_path / side_cam_name
     side_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="SideCam")
+    
+    fastec_metadata_file_path = trial_folder_path / f"{file_path.stem}.txt"
+    fastec_metadata = extract_fastec_metadata(fastec_metadata_file_path)
+    fastec_total_frames = fastec_metadata["image"]["frame_count"]
+    fastec_framerate = fastec_metadata["record"]["fps"]
 
-    top_camera_name = "TOPCAM_000000.avi"
-    file_path = trial_folder_path / top_camera_name
+    cam_trigger = sync_info_dict["cam_trigger"]
+    # Find trigger times (when signal goes above 3V)
+    fastec_trigger_index = np.where(cam_trigger > 3)[0][0]
+    fastec_trigger_time = fastec_trigger_index / daq_sampling_rate
+    
+    # Create timestamps for Fastec camera (TOPCAM)
+    fastec_timestamps = np.linspace(1/fastec_framerate, 
+                                fastec_total_frames/fastec_framerate, 
+                                fastec_total_frames)
+    # Align to trigger time
+    fastec_timestamps = fastec_timestamps - (fastec_timestamps[-1] - fastec_trigger_time)
 
+    side_cam_interface.set_aligned_timestamps(aligned_timestamps=[fastec_timestamps])
+    
+    # For TopCam (similar to SideCam)
+    top_cam_name = "TOPCAM_000000.avi"
+    file_path = trial_folder_path / top_cam_name
     top_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="TopCam")
 
+    fastec_metadata_file_path = trial_folder_path / f"{file_path.stem}.txt"
+    fastec_metadata = extract_fastec_metadata(fastec_metadata_file_path)
+    fastec_total_frames = fastec_metadata["image"]["frame_count"]
+    fastec_framerate = fastec_metadata["record"]["fps"]
+
+    # Using the same camera trigger as SideCam since they use the same sync signal
+    cam_trigger = sync_info_dict["cam_trigger"]
+    fastec_trigger_index = np.where(cam_trigger > 3)[0][0]
+    fastec_trigger_time = fastec_trigger_index / daq_sampling_rate
+
+    # Create timestamps for TopCam
+    fastec_timestamps = np.linspace(1/fastec_framerate, 
+                                fastec_total_frames/fastec_framerate, 
+                                fastec_total_frames)
+    # Align to trigger time
+    fastec_timestamps = fastec_timestamps - (fastec_timestamps[-1] - fastec_trigger_time)
+
+    # Set the aligned timestamps for TopCam
+    top_cam_interface.set_aligned_timestamps(aligned_timestamps=[fastec_timestamps])
+
     haltere_camera_name = "XZ_1_186.mp4"
-
     file_path = trial_folder_path / haltere_camera_name
-    haltere_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="BackCam")
+    haltere_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="HaltereCam")
+    
+    phantom_metadata_file_path = trial_folder_path / "XZ_1_186.xml" 
+    phantom_metadata = extract_phantom_metadata(phantom_metadata_file_path)
+    
+    phantom_total_frames = phantom_metadata["total_frames"]
+    phantom_framerate = phantom_metadata["frame_rate"]
+    
+    # Find trigger times (when signal goes above 3V)
+    ptrigger = sync_info_dict["ptrigger"]
+    phantom_trigger_index = np.where(ptrigger > 3)[0][0]
 
-    # DLC interface
+    phantom_trigger_time = phantom_trigger_index / daq_sampling_rate
+
+    # Create timestamps for Phantom camera
+    phantom_timestamps = np.linspace(1/phantom_framerate, 
+                                phantom_total_frames/phantom_framerate, 
+                                phantom_total_frames)
+    # Align to trigger time
+    phantom_timestamps = phantom_timestamps - (phantom_timestamps[-1] - phantom_trigger_time)
+
+    haltere_cam_interface.set_aligned_timestamps(aligned_timestamps=[phantom_timestamps])
+    
+    #########################
+    # DeepLabCut interfaces
+    #########################
+    
     top_cam_dlc_file_name = "TOPCAM_000000DLC_resnet50_antennatrackingMar11shuffle1_100000.h5"
     top_cam_file_path = trial_folder_path / top_cam_dlc_file_name
     top_cam_dlc_interface = DeepLabCutInterface(file_path=top_cam_file_path)
@@ -69,16 +137,16 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
     haltere_cam_file_path = trial_folder_path / haltere_cam_dlc_file_name
     haltere_cam_dlc_interface = DeepLabCutInterface(file_path=haltere_cam_file_path)
 
-    data_interface = {
+    data_interfaces = {
         "Behavior": behavior_interface,
         "SideCam": side_cam_interface,
         "TopCam": top_cam_interface,
-        "BackCam": haltere_cam_interface,
+        "HaltereCam": haltere_cam_interface,
         "DeepLabCutTopCam": top_cam_dlc_interface,
         "DeepLabCutHaltereCam": haltere_cam_dlc_interface,
     }
 
-    converter = ConverterPipe(data_interfaces=data_interface)
+    converter = ConverterPipe(data_interfaces=data_interfaces)
 
     # Add datetime to conversion
     metadata = converter.get_metadata()
