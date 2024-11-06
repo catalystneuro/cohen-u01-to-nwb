@@ -62,7 +62,34 @@ ctrig = ddata.daq.data(:,2); %fastec cam trigger
 ptrig = ddata.daq.data(:,9); %photron trigger
 wtrig = ddata.daq.data(:,10); %wind trigger
 
- q
+%NOT CURRENTLY USING
+%including in struct though so it's there if needed?
+%otrig = ddata.daq.data(:,3); %opto trigger
+dwbf = ddata.daq.data(:,6);
+%wbf data from wingbeat amplifier needs to be multiplied by 100: 
+% 1V = 100Hz
+dwbf = dwbf*100; %daq wingbeat freq, added 7/17
+dwbaL = ddata.daq.data(:,4); %temp
+% twbaL = twbaL - mean(twbaL(1:2499)); %set to 0 for denoising
+dwbaR = ddata.daq.data(:,5);
+% twbaR = twbaR - mean(twbaR(1:2499));
+% hutchenL = ddata.daq.data(:,7); 
+% hutchenR = ddata.daq.data(:,8); 
+
+%ALIGN CAMERAS TO DAQ - CHECK WITH MIKE AGAIN?
+%find trigger times
+ctrigtime = find(ctrig>3,1)/ddata.daq.fs;
+ptrigtime = find(ptrig>3,1)/ddata.daq.fs;
+
+%topcam (currently skipping sidecam!)
+meta_t = fastecMetaReader(fullfile(trial_path, 'TOPCAM_000000.txt'));
+ts_t = linspace(1/meta_t.fs, meta_t.numframes/meta_t.fs, meta_t.numframes);
+ts_t = ts_t-(ts_t(end)-ctrigtime);
+%photron/phantom camera
+mp = dir([trial_path filesep 'HALTCAM*.mii']); %since the number changes every time
+meta_p = photronMetaReader(fullfile(mp.folder, mp.name));
+ts_p = linspace(1/meta_p.fs, meta_p.numframes/meta_p.fs, meta_p.numframes);
+ts_p = ts_p-(ts_p(end)-ptrigtime);
 
 %% ANTENNAE
 %subtract height from y data because y = 0 is at top of image
