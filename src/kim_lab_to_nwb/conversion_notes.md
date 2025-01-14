@@ -23,7 +23,7 @@ Those are images, a new dataset with the stimuli will be send to us.
 * How to synchronize the Videos, we should be aligned, we are dtecting crossin a threshold for hits.
 They are synchronized using the data in the DAQ.
 
-The data from the stimuli looks like this:
+The data from the stimuli (in the raw folder `Pattern_1_stripe_24.mat`) looks like this:
 
 ```
 x_num 161
@@ -42,7 +42,11 @@ It also has a BitMaxIndex that looks more convoluted:
 BitMapIndex {'Panel_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], 'row_range': [array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8)], 'column_range': [array([73, 74, 75, 76, 77, 78, 79, 80], dtype=uint8), array([49, 50, 51, 52, 53, 54, 55, 56], dtype=uint8), array([25, 26, 27, 28, 29, 30, 31, 32], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([65, 66, 67, 68, 69, 70, 71, 72], dtype=uint8), array([41, 42, 43, 44, 45, 46, 47, 48], dtype=uint8), array([17, 18, 19, 20, 21, 22, 23, 24], dtype=uint8), array([89, 90, 91, 92, 93, 94, 95, 96], dtype=uint8), array([57, 58, 59, 60, 61, 62, 63, 64], dtype=uint8), array([33, 34, 35, 36, 37, 38, 39, 40], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([81, 82, 83, 84, 85, 86, 87, 88], dtype=uint8), array([73, 74, 75, 76, 77, 78, 79, 80], dtype=uint8), array([49, 50, 51, 52, 53, 54, 55, 56], dtype=uint8), array([25, 26, 27, 28, 29, 30, 31, 32], dtype=uint8), array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8), array([65, 66, 67, 68, 69, 70, 71, 72], dtype=uint8), array([41, 42, 43, 44, 45, 46, 47, 48], dtype=uint8), array([17, 18, 19, 20, 21, 22, 23, 24], dtype=uint8), array([89, 90, 91, 92, 93, 94, 95, 96], dtype=uint8), array([57, 58, 59, 60, 61, 62, 63, 64], dtype=uint8), array([33, 34, 35, 36, 37, 38, 39, 40], dtype=uint8), array([ 9, 10, 11, 12, 13, 14, 15, 16], dtype=uint8), array([81, 82, 83, 84, 85, 86, 87, 88], dtype=uint8)]}
 ```
 
-## For the ROI there three fields
+## For the ROI there are three fields
+
+This is in the analysis folder (`ROI_20240108b_00003.mat`), the fields are:
+
+```
 
 dict_keys(['x_cor', 'reference_image', 'y_cor', 'total_ROI'])
 
@@ -55,5 +59,4 @@ y_cor: shape=(17, 3)
 ```
 
 What are the three things, vertices? So the ROIs are triangles.
-                                                                                                                                                                                                                                                                                              
 

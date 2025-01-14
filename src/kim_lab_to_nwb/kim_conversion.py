@@ -10,6 +10,7 @@ from pynwb.file import Subject
 from pymatreader import read_mat
 
 from kim_lab_to_nwb.ophys import MultiTiffMultiPageTiffImagingInterface
+from kim_lab_to_nwb.stimuli import KimLabStimuliInterface
 from cohen_u01_nwb_conversion_utils.utils import detect_threshold_crossings
 
 
@@ -18,6 +19,7 @@ def convert_session_to_nwb(
     video_file_path: str | Path,
     experiment_info_file_path: str | Path,
     tiff_folder_path: str | Path,
+    visual_stimuli_file_path: str | Path,
     output_dir: str | Path,
     verbose: bool = False,
 ) -> Path:
@@ -34,6 +36,8 @@ def convert_session_to_nwb(
         Path to the experiment info file
     tiff_folder_path : str or Path
         Path to the folder containing TIFF files
+    visual_stimuli_file_path : str or Path
+        Path to the visual_stimuli.mat file
     output_dir : str or Path
         Directory where the NWB file will be saved
     verbose : bool, optional
@@ -54,6 +58,7 @@ def convert_session_to_nwb(
     video_file_path = Path(video_file_path)
     experiment_info_file_path = Path(experiment_info_file_path)
     tiff_folder_path = Path(tiff_folder_path)
+    visual_stimuli_file_path = Path(visual_stimuli_file_path)
     output_dir = Path(output_dir)
 
     # Validate input files exist
@@ -65,6 +70,8 @@ def convert_session_to_nwb(
         raise FileNotFoundError(f"Experiment info file not found at {experiment_info_file_path}")
     if not tiff_folder_path.exists():
         raise FileNotFoundError(f"Tiff folder not found at {tiff_folder_path}")
+    if not visual_stimuli_file_path.is_file():
+        raise FileNotFoundError(f"visual_stimuli.mat file not found at {visual_stimuli_file_path}")
 
     # Load data
     mat_data = read_mat(matlab_data_file_path)
@@ -114,6 +121,14 @@ def convert_session_to_nwb(
     aligned_timestamps = aligned_timestamps[:ophys_interface.imaging_extractor.get_num_frames()]
     ophys_interface.set_aligned_timestamps(aligned_timestamps=aligned_timestamps)
     ophys_interface.add_to_nwbfile(nwbfile, metadata=dict())
+
+    # Set up stimuli interface
+    stimuli_interface = KimLabStimuliInterface(
+        file_path=visual_stimuli_file_path,
+        sampling_frequency=30.0,  # Same rate as imaging data
+        verbose=verbose
+    )
+    stimuli_interface.add_to_nwbfile(nwbfile, metadata=dict())
 
     # Set up video interface
     video_interface = VideoInterface(
@@ -175,13 +190,13 @@ def convert_session_to_nwb(
 
 if __name__ == "__main__":
     # Example usage with the original paths
-    data_folder_path = Path("/Users/heberto/project_data/Sample data-selected/Kim Lab")
     data_folder_path = Path("/home/heberto/cohen_project/Sample data/Kim Lab")
     # Define input paths
     matlab_data_file_path = data_folder_path / "raw data" / "data_20240108b_00003.mat"
     video_file_path = data_folder_path / "raw data" / "20240108b_00003.avi"
     experiment_info_file_path = data_folder_path / "raw data" / "exp_info.mat"
     tiff_folder_path = data_folder_path / "raw data"
+    visual_stimuli_file_path = data_folder_path / "raw data" / "visual_stimuli.mat"
     output_dir = data_folder_path / "nwb"
 
     output_dir.mkdir(exist_ok=True, parents=True)
@@ -191,6 +206,7 @@ if __name__ == "__main__":
         video_file_path=video_file_path,
         experiment_info_file_path=experiment_info_file_path,
         tiff_folder_path=tiff_folder_path,
+        visual_stimuli_file_path=visual_stimuli_file_path,
         output_dir=output_dir,
         verbose=True  # Enable verbose output for demonstration
     )
