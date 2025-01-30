@@ -8,6 +8,7 @@ from neuroconv.datainterfaces import VideoInterface
 from pynwb import NWBFile, TimeSeries, NWBHDF5IO
 from pynwb.file import Subject
 from pymatreader import read_mat
+from pynwb.device import Device
 
 from kim_lab_to_nwb.ophys import MultiTiffMultiPageTiffImagingInterface, KimLabROIInterface
 from kim_lab_to_nwb.stimuli import KimLabStimuliInterface
@@ -20,6 +21,7 @@ def convert_session_to_nwb(
     experiment_info_file_path: str | Path,
     tiff_folder_path: str | Path,
     df_f_file_path: str | Path,
+    roi_info_file_path: str | Path,
     visual_stimuli_file_path: str | Path,
     output_dir: str | Path,
     verbose: bool = False,
@@ -125,6 +127,17 @@ def convert_session_to_nwb(
     ophys_interface.set_aligned_timestamps(aligned_timestamps=aligned_timestamps)
     ophys_interface.add_to_nwbfile(nwbfile, metadata=dict())
 
+
+    # Set up ROI interface
+    roi_interface = KimLabROIInterface(
+        file_path=df_f_file_path,
+        roi_info_file_path=roi_info_file_path,
+        sampling_frequency=30.0,  # Same rate as imaging data
+        verbose=verbose
+    )
+    roi_interface.add_to_nwbfile(nwbfile, metadata=dict())
+
+
     # Set up stimuli interface
     stimuli_interface = KimLabStimuliInterface(
         file_path=visual_stimuli_file_path,
@@ -132,14 +145,6 @@ def convert_session_to_nwb(
         verbose=verbose
     )
     stimuli_interface.add_to_nwbfile(nwbfile, metadata=dict())
-
-    # Set up ROI interface
-    roi_interface = KimLabROIInterface(
-        file_path=df_f_file_path,
-        sampling_frequency=30.0,  # Same rate as imaging data
-        verbose=verbose
-    )
-    roi_interface.add_to_nwbfile(nwbfile, metadata=dict())
 
     # Set up video interface
     video_interface = VideoInterface(
@@ -185,6 +190,22 @@ def convert_session_to_nwb(
     )
     nwbfile.add_acquisition(timeseries_x_position)
 
+    # Add DAQ device
+    
+    ni_daq = Device(
+        name="NI 782258-01",
+        description=(
+            "Multifunction DAQ device with USB 2.0 connectivity. "
+            "32 single-ended or 16 differential analog inputs (16-bit resolution), "
+            "4 analog outputs (±10V, 16-bit resolution), "
+            "32 digital I/O, 16 bidirectional channels, "
+            "4 counter/timers, 1 MS/s sampling rate."  #TODO get a description in termso f hte experiment
+        ),
+        manufacturer="National Instruments (NI)",
+    )
+    nwbfile.add_device(ni_daq)
+
+
     # Configure and save the NWB file
     backend_configuration = get_default_backend_configuration(nwbfile, backend="hdf5")
     configure_backend(nwbfile=nwbfile, backend_configuration=backend_configuration)
@@ -209,6 +230,7 @@ if __name__ == "__main__":
     tiff_folder_path = data_folder_path / "raw data"
     visual_stimuli_file_path = data_folder_path / "raw data" / "visual_stimuli.mat"
     df_f_file_path = data_folder_path / "analysis" / "df_f.mat"
+    roi_info_file_path = data_folder_path / "analysis" / "ROI_20240108b_00003.mat"
     output_dir = data_folder_path / "nwb"
 
     output_dir.mkdir(exist_ok=True, parents=True)
@@ -220,6 +242,7 @@ if __name__ == "__main__":
         tiff_folder_path=tiff_folder_path,
         visual_stimuli_file_path=visual_stimuli_file_path,
         df_f_file_path=df_f_file_path,
+        roi_info_file_path=roi_info_file_path,
         output_dir=output_dir,
         verbose=True  # Enable verbose output for demonstration
     )
