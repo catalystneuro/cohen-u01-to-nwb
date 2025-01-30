@@ -255,6 +255,8 @@ class KimLabROIInterface(BaseDataInterface):
         )
         
         # Add ROI fluorescence data
+
+        
         roi_response_series = RoiResponseSeries(
             name="RoIResponseSeries",
             data=df_f_data.T,
@@ -264,5 +266,8 @@ class KimLabROIInterface(BaseDataInterface):
             description="Change in fluorescence normalized by baseline fluorescence (dF/F)"
         )
         
+        from pynwb.ophys import DfOverF
+        df_over_f_container = DfOverF(roi_response_series=roi_response_series)
+        
         # Add to the ophys processing module
-        ophys_module.add(roi_response_series)
+        ophys_module.add(df_over_f_container)
