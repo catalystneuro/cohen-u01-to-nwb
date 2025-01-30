@@ -65,3 +65,9 @@ y_cor: shape=(17, 3)
 
 What are the three things, vertices? So the ROIs are triangles.
 
+
+## Imaging data
+This is scan image data with a self-made microscope. The specification of the tiff file metadata can be found here:
+
+https://docs.scanimage.org/Appendix/ScanImage%2BBigTiff%2BSpecification.html#scanimage-bigtiff-specification
+
