@@ -14,6 +14,8 @@
 
 # Questions for the meeting on 2024-11-06
 * How is the data in the matlab aquired? which DAQ?
+The DAQ is the following:
+[Link to device](https://www.digikey.com/en/products/detail/ni/782258-01/12817857)
 * The data that you shared with us? is this associated with a paper? is this something you are interested on sharing on dandi? What are the expectations of the code 
 No paper, what they want is some flexible set of routines that they can upload to DANDI.
 * The tiff format, what kind of microscope is it? Scanimage? If you could send me the model that would be useful.
@@ -22,6 +24,9 @@ The microscope is self-made but for data acquisition they use Scanimage. They wi
 Those are images, a new dataset with the stimuli will be send to us.
 * How to synchronize the Videos, we should be aligned, we are dtecting crossin a threshold for hits.
 They are synchronized using the data in the DAQ.
+* Are the timestamps of the fluoresence traces and the stimuli the ones that are in the DAQ as well?
+I see that all of them have the same number of samples.
+* What are the emission oand excitation lambda?
 
 The data from the stimuli (in the raw folder `Pattern_1_stripe_24.mat`) looks like this:
 
@@ -59,4 +64,10 @@ y_cor: shape=(17, 3)
 ```
 
 What are the three things, vertices? So the ROIs are triangles.
+
+
+## Imaging data
+This is scan image data with a self-made microscope. The specification of the tiff file metadata can be found here:
+
+https://docs.scanimage.org/Appendix/ScanImage%2BBigTiff%2BSpecification.html#scanimage-bigtiff-specification
 

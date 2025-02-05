@@ -20,6 +20,7 @@ dependencies = [
   "roiextractors",
   "tifffile",
   "pymatreader",
+  "skimage", # for the Kim lab conversion polygon mask
 ]
 
 [project.urls]
