@@ -102,6 +102,8 @@ def convert_stimuli_experiment_to_nwb(
             identifier=str(uuid.uuid4()),
             session_id=session_id,
             session_description=session_description,
+            experimenter=["Leung, Abby", "Cohen, Itai"],
+            keywords = ["Free flight", "Optogenetics", "Wing kinematics", "Body kinematics"],
         )
         
         # Create detailed subject information
@@ -109,7 +111,7 @@ def convert_stimuli_experiment_to_nwb(
         nwbfile.subject = Subject(
             subject_id=f"fly_{session_date}_{video_number_xxx_format}",
             sex="F",  # All flies are female
-            age="P3-5",  # 3-5 days post-eclosion
+            age="P3D/P5D",  # 3-5 days post-eclosion
             description="Female fly, 3-5 days old post-eclosion",
             genotype=full_genotype,
             strain=f"{driver[experiment_index]}>UAS-{experiment_effector}",  # Standard notation for fly crosses
