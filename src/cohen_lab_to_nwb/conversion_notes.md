@@ -128,6 +128,11 @@ https://www.zeiss.com/microscopy/us/products/software/zeiss-zen/czi-image-file-f
 The github repo contains examples files and notebooks on how to read this:
 https://github.com/ZEISS/pylibczirw/tree/main
 
+The specification is here:
+
+https://zeiss.github.io/pylibczirw/
+
+
 
 ## Subject
 
