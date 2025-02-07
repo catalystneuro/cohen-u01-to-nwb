@@ -21,6 +21,7 @@ dependencies = [
   "tifffile",
   "pymatreader",
   "skimage", # for the Kim lab conversion polygon mask
+  "czifile", # for the Cohen lab conversion confocal images
 ]
 
 [project.urls]

@@ -1,0 +1,729 @@
+{
+    "ImageDocument": {
+        "Metadata": {
+            "Version": 1.0,
+            "Information": {
+                "User": {
+                    "DisplayName": "ht452"
+                },
+                "Document": {
+                    "Name": "tp1-alt_VNC2",
+                    "Description": null,
+                    "Comment": null,
+                    "UserName": "ht452",
+                    "CreationDate": "2024-08-01T17:30:51",
+                    "SubType": "Image",
+                    "Rating": 0,
+                    "Title": "tp1-alt_VNC2"
+                },
+                "Image": {
+                    "OriginalScanData": true,
+                    "PixelType": "Gray16",
+                    "ComponentBitCount": 12,
+                    "SizeX": 1024,
+                    "SizeY": 1949,
+                    "SizeZ": 209,
+                    "SizeC": 2,
+                    "MicroscopeRef": {
+                        "Id": "Microscope:0"
+                    },
+                    "ObjectiveSettings": {
+                        "ObjectiveRef": {
+                            "Id": "Objective:0"
+                        },
+                        "Medium": "Water",
+                        "RefractiveIndex": 1.333
+                    },
+                    "Dimensions": {
+                        "Channels": {
+                            "Channel": [
+                                {
+                                    "IlluminationType": "Epifluorescence",
+                                    "ContrastMethod": "Fluorescence",
+                                    "PinholeSizeAiry": 0.7684286570831079,
+                                    "Fluor": "Alexa Fluor 488",
+                                    "DetectionWavelength": {
+                                        "Ranges": "493-628.00000000000023"
+                                    },
+                                    "ExcitationWavelength": 488.00000000000006,
+                                    "EmissionWavelength": 560.5000000000001,
+                                    "AcquisitionMode": "LaserScanningConfocalMicroscopy",
+                                    "LaserScanInfo": {
+                                        "PixelTime": 2.048e-06,
+                                        "ZoomX": 1,
+                                        "ZoomY": 1,
+                                        "SampleRotation": 0,
+                                        "SampleOffsetX": 0,
+                                        "SampleOffsetY": 0,
+                                        "LineTime": 2.44e-07,
+                                        "FrameTime": 2.5165824,
+                                        "ScanningMode": "LineSequential",
+                                        "Averaging": 1
+                                    },
+                                    "ChannelType": "Unspecified",
+                                    "DetectorSettings": {
+                                        "Detector": {
+                                            "Id": "Detector:0:0"
+                                        },
+                                        "Binning": "1x1",
+                                        "PhotonConversionFactor": 107.48931213849848,
+                                        "Gain": 600,
+                                        "DigitalGain": 1,
+                                        "Offset": 40
+                                    },
+                                    "LightSourcesSettings": {
+                                        "LightSourceSettings": [
+                                            {
+                                                "LightSource": {
+                                                    "Id": "LightSource:0"
+                                                },
+                                                "Attenuation": 0.96,
+                                                "Wavelength": 633,
+                                                "Polarization": {
+                                                    "StokesParameter1": 1,
+                                                    "StokesParameter2": 1,
+                                                    "StokesParameter3": 0,
+                                                    "StokesParameter4": 0
+                                                }
+                                            },
+                                            {
+                                                "LightSource": {
+                                                    "Id": "LightSource:1"
+                                                },
+                                                "Attenuation": 0.96,
+                                                "Wavelength": 488.00000000000006,
+                                                "Polarization": {
+                                                    "StokesParameter1": 1,
+                                                    "StokesParameter2": 1,
+                                                    "StokesParameter3": 0,
+                                                    "StokesParameter4": 0
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "FilterSet": {
+                                        "Id": "FilterSet:0:0:0"
+                                    },
+                                    "AiryscanSettings": {
+                                        "Mode": "Off",
+                                        "VirtualPinholeSize": 1,
+                                        "Magnification": 1,
+                                        "TransformationXX": 5.21852335e-315,
+                                        "TransformationXY": -1.319930636449394e-309,
+                                        "TransformationYX": 0.00781250181453823,
+                                        "TransformationYY": 1.9400729911467656e-08
+                                    },
+                                    "Id": 250299656312339834731122977435251693019,
+                                    "Name": "Ch1"
+                                },
+                                {
+                                    "IlluminationType": "Epifluorescence",
+                                    "ContrastMethod": "Fluorescence",
+                                    "PinholeSizeAiry": 0.621955613422501,
+                                    "Fluor": "Alexa Fluor 633",
+                                    "DetectionWavelength": {
+                                        "Ranges": "638.00000000000023-747"
+                                    },
+                                    "ExcitationWavelength": 633,
+                                    "EmissionWavelength": 692.5000000000001,
+                                    "AcquisitionMode": "LaserScanningConfocalMicroscopy",
+                                    "LaserScanInfo": {
+                                        "PixelTime": 2.048e-06,
+                                        "ZoomX": 1,
+                                        "ZoomY": 1,
+                                        "SampleRotation": 0,
+                                        "SampleOffsetX": 0,
+                                        "SampleOffsetY": 0,
+                                        "LineTime": 2.44e-07,
+                                        "FrameTime": 2.5165824,
+                                        "ScanningMode": "LineSequential",
+                                        "Averaging": 1
+                                    },
+                                    "ChannelType": "Unspecified",
+                                    "DetectorSettings": {
+                                        "Detector": {
+                                            "Id": "Detector:0:1"
+                                        },
+                                        "Binning": "1x1",
+                                        "PhotonConversionFactor": 107.48931213849848,
+                                        "Gain": 773.9285714285725,
+                                        "DigitalGain": 1,
+                                        "Offset": 40
+                                    },
+                                    "LightSourcesSettings": {
+                                        "LightSourceSettings": [
+                                            {
+                                                "LightSource": {
+                                                    "Id": "LightSource:0"
+                                                },
+                                                "Attenuation": 0.96,
+                                                "Wavelength": 633,
+                                                "Polarization": {
+                                                    "StokesParameter1": 1,
+                                                    "StokesParameter2": 1,
+                                                    "StokesParameter3": 0,
+                                                    "StokesParameter4": 0
+                                                }
+                                            },
+                                            {
+                                                "LightSource": {
+                                                    "Id": "LightSource:1"
+                                                },
+                                                "Attenuation": 0.96,
+                                                "Wavelength": 488.00000000000006,
+                                                "Polarization": {
+                                                    "StokesParameter1": 1,
+                                                    "StokesParameter2": 1,
+                                                    "StokesParameter3": 0,
+                                                    "StokesParameter4": 0
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "FilterSet": {
+                                        "Id": "FilterSet:0:1:0"
+                                    },
+                                    "AiryscanSettings": {
+                                        "Mode": "Off",
+                                        "VirtualPinholeSize": 1,
+                                        "Magnification": 1,
+                                        "TransformationXX": 5.21852335e-315,
+                                        "TransformationXY": -1.319930636449394e-309,
+                                        "TransformationYX": 0.00781250181453823,
+                                        "TransformationYY": 1.9400729911467656e-08
+                                    },
+                                    "Id": 3697745414114940127220158048011469725209,
+                                    "Name": "Ch2"
+                                }
+                            ]
+                        },
+                        "Tracks": {
+                            "Track": {
+                                "ChannelRefs": {
+                                    "ChannelRef": [
+                                        {
+                                            "Id": 250299656312339834731122977435251693019
+                                        },
+                                        {
+                                            "Id": 3697745414114940127220158048011469725209
+                                        }
+                                    ]
+                                },
+                                "Id": "Track:0"
+                            }
+                        },
+                        "T": {
+                            "Positions": {
+                                "BinaryList": {
+                                    "AttachmentName": "TimeStamps"
+                                }
+                            }
+                        },
+                        "Z": {
+                            "StartPosition": 0,
+                            "Positions": {
+                                "Interval": {
+                                    "Start": 0,
+                                    "Increment": 1
+                                }
+                            }
+                        },
+                        "S": {
+                            "Scenes": {
+                                "Scene": {
+                                    "Positions": {
+                                        "Position": {
+                                            "X": 0,
+                                            "Y": 0,
+                                            "Z": -77.682
+                                        }
+                                    },
+                                    "Index": 0
+                                }
+                            }
+                        }
+                    }
+                },
+                "Instrument": {
+                    "Microscopes": {
+                        "Microscope": {
+                            "System": "LSM 880, Axio Examiner",
+                            "Id": "Microscope:0"
+                        }
+                    },
+                    "LightSources": {
+                        "LightSource": [
+                            {
+                                "Power": 5,
+                                "LightSourceType": {
+                                    "Laser": {
+                                        "Wavelength": 633.0
+                                    }
+                                },
+                                "Manufacturer": {
+                                    "Model": "HeNe633"
+                                },
+                                "Id": "LightSource:0"
+                            },
+                            {
+                                "Power": 24,
+                                "LightSourceType": {
+                                    "Laser": {
+                                        "Wavelength": 458.0
+                                    }
+                                },
+                                "Manufacturer": {
+                                    "Model": "ArgonRemote"
+                                },
+                                "Id": "LightSource:1"
+                            }
+                        ]
+                    },
+                    "Detectors": {
+                        "Detector": [
+                            {
+                                "Gain": 1,
+                                "Zoom": 1,
+                                "AmplificationGain": 1,
+                                "Manufacturer": {
+                                    "Model": null
+                                },
+                                "Type": "PMT",
+                                "Id": "Detector:0:0"
+                            },
+                            {
+                                "Gain": 1,
+                                "Zoom": 1,
+                                "AmplificationGain": 1,
+                                "Manufacturer": {
+                                    "Model": null
+                                },
+                                "Type": "PMT",
+                                "Id": "Detector:0:1"
+                            }
+                        ]
+                    },
+                    "Objectives": {
+                        "Objective": {
+                            "Immersion": "Water",
+                            "LensNA": 1,
+                            "NominalMagnification": 20,
+                            "Manufacturer": {
+                                "Model": "W Plan-Apochromat 20x/1.0 DIC D=0.17 VIS-IR M27 75mm"
+                            },
+                            "Id": "Objective:0"
+                        }
+                    },
+                    "Filters": {
+                        "Filter": [
+                            {
+                                "TransmittanceRange": {
+                                    "CutIn": 493,
+                                    "CutOut": 628,
+                                    "Id": "TransmittanceRange:0:0:0"
+                                },
+                                "Id": "Filter:0:0:0"
+                            },
+                            {
+                                "TransmittanceRange": {
+                                    "CutIn": 638,
+                                    "CutOut": 747,
+                                    "Id": "TransmittanceRange:0:1:0"
+                                },
+                                "Id": "Filter:0:1:0"
+                            }
+                        ]
+                    },
+                    "FilterSets": {
+                        "FilterSet": [
+                            {
+                                "EmissionFilters": {
+                                    "EmissionFilterRef": {
+                                        "Id": "Filter:0:0:0"
+                                    }
+                                },
+                                "Id": "FilterSet:0:0:0"
+                            },
+                            {
+                                "EmissionFilters": {
+                                    "EmissionFilterRef": {
+                                        "Id": "Filter:0:1:0"
+                                    }
+                                },
+                                "Id": "FilterSet:0:1:0"
+                            }
+                        ]
+                    },
+                    "Id": "Instrument:0"
+                },
+                "Application": {
+                    "Name": "AIMApplication",
+                    "Version": "14.0.27.201"
+                }
+            },
+            "DisplaySetting": {
+                "Channels": {
+                    "Channel": [
+                        {
+                            "ColorMode": "Color",
+                            "Low": 0,
+                            "High": 0.0625,
+                            "Gamma": 1,
+                            "IsSelected": true,
+                            "ChannelUnit": {
+                                "FactorI": 1,
+                                "OffsetI": 0,
+                                "UnitI": "Unknown",
+                                "ChannelType": "Unspecified"
+                            },
+                            "DyeName": "Alexa Fluor 488",
+                            "Color": "#00FF00",
+                            "Id": 250299656312339834731122977435251693019,
+                            "Name": "Ch1"
+                        },
+                        {
+                            "ColorMode": "Color",
+                            "Low": 0,
+                            "High": 0.0625,
+                            "Gamma": 1,
+                            "IsSelected": true,
+                            "ChannelUnit": {
+                                "FactorI": 1,
+                                "OffsetI": 0,
+                                "UnitI": "Unknown",
+                                "ChannelType": "Unspecified"
+                            },
+                            "DyeName": "Alexa Fluor 633",
+                            "Color": "#FF00FF",
+                            "Id": 3697745414114940127220158048011469725209,
+                            "Name": "Ch2"
+                        }
+                    ]
+                }
+            },
+            "Scaling": {
+                "Items": {
+                    "Distance": [
+                        {
+                            "Value": 4.151329120498975e-07,
+                            "Id": "X"
+                        },
+                        {
+                            "Value": 4.151329120498975e-07,
+                            "Id": "Y"
+                        },
+                        {
+                            "Value": 1e-06,
+                            "Id": "Z"
+                        }
+                    ]
+                }
+            },
+            "Layers": null,
+            "Appliances": {
+                "Appliance": {
+                    "Data": {
+                        "ShuttleAndFindData": {
+                            "Calibration": {
+                                "Markers": {
+                                    "Marker": [
+                                        {
+                                            "Id": "Marker:1",
+                                            "StageXPosition": 0,
+                                            "StageYPosition": 0,
+                                            "FocusPosition": 0
+                                        },
+                                        {
+                                            "Id": "Marker:2",
+                                            "StageXPosition": 0,
+                                            "StageYPosition": 0,
+                                            "FocusPosition": 0
+                                        },
+                                        {
+                                            "Id": "Marker:3",
+                                            "StageXPosition": 0,
+                                            "StageYPosition": 0,
+                                            "FocusPosition": 0
+                                        }
+                                    ]
+                                },
+                                "StageOrientation": {
+                                    "Y": -1,
+                                    "X": 1
+                                },
+                                "MicroscopeType": "LM"
+                            }
+                        }
+                    },
+                    "Id": "ShuttleAndFind:1"
+                }
+            },
+            "CustomAttributes": null,
+            "Experiment": {
+                "ExperimentBlockIndex": 0,
+                "ExperimentBlocks": {
+                    "AcquisitionBlock": {
+                        "AcquisitionModeSetup": {
+                            "BiDirectional": true,
+                            "BiDirectionalZ": false,
+                            "BitsPerSample": 12,
+                            "CameraBinning": 1,
+                            "CameraFrameHeight": 1030,
+                            "CameraFrameOffsetX": 0,
+                            "CameraFrameOffsetY": 0,
+                            "CameraFrameWidth": 1300,
+                            "CameraSuperSampling": 0,
+                            "DimensionT": 10,
+                            "DimensionX": 1024,
+                            "DimensionY": 1024,
+                            "DimensionZ": 209,
+                            "FilterMethod": "Average",
+                            "FilterMode": "Line",
+                            "FilterSamplingNumber": 1,
+                            "FitFramesizeToRoi": false,
+                            "HdrEnabled": false,
+                            "HdrImagingMode": 0,
+                            "HdrIntensity": 1,
+                            "HdrNumFrames": 1,
+                            "InterpolationY": 1,
+                            "Objective": "W Plan-Apochromat 20x/1.0 DIC D=0.17 VIS-IR M27 75mm",
+                            "OffsetX": 0,
+                            "OffsetY": 0,
+                            "OffsetZ": 4.128e-05,
+                            "ReferenceZ": -7.768199999999999e-05,
+                            "PixelPeriod": 2.048e-06,
+                            "Rotation": 0,
+                            "AcquisitionMode": "StackFocus",
+                            "RtBinning": 1,
+                            "RtFrameHeight": 512,
+                            "RtFrameWidth": 512,
+                            "RtLinePeriod": 2.44e-07,
+                            "RtOffsetX": 0,
+                            "RtOffsetY": 0,
+                            "RtRegionHeight": 512,
+                            "RtRegionWidth": 512,
+                            "RtSuperSampling": 1,
+                            "RtZoom": 1,
+                            "ScalingX": 4.151329120498975e-07,
+                            "ScalingY": 4.151329120498975e-07,
+                            "ScalingZ": 1e-06,
+                            "SimRotations": 3,
+                            "TimeSeries": false,
+                            "TrackMultiplexType": "Line",
+                            "UseRois": false,
+                            "ZoomX": 1,
+                            "ZoomY": 1,
+                            "PreScan": false,
+                            "FocusStabilizer": false,
+                            "ScannerOnlineCorrection": true,
+                            "WaitState": false,
+                            "FocalDistanceStandardTubeLense": 164.5,
+                            "ApertureDiameter": 4.409999999999999,
+                            "SamplingStart": 1,
+                            "SamplingEnd": 1,
+                            "RequestedScanSpeed": 1
+                        },
+                        "TimeSeriesSetup": {
+                            "StartMode": {
+                                "DigitalOut": null,
+                                "Manual": null
+                            },
+                            "StopMode": {
+                                "DigitalOut": null,
+                                "Manual": null
+                            }
+                        },
+                        "ZStackSetup": {
+                            "StackBrightnessCorrection": false,
+                            "StackBrightnessCorrections": {
+                                "Positions": null,
+                                "Extrapolate": false,
+                                "Interpolation": "Cubic"
+                            }
+                        },
+                        "MultiTrackSetup": {
+                            "TrackSetup": {
+                                "Attenuators": {
+                                    "Attenuator": [
+                                        {
+                                            "Wavelength": 6.33e-07,
+                                            "Transmission": 0.04,
+                                            "LaserSuppression": false,
+                                            "ExcitationIntensity": 0,
+                                            "Laser": "HeNe633",
+                                            "Polarization_Stokes0": 1,
+                                            "Polarization_Stokes1": 1,
+                                            "Polarization_Stokes2": 0,
+                                            "Polarization_Stokes3": 0
+                                        },
+                                        {
+                                            "Wavelength": 4.88e-07,
+                                            "Transmission": 0.04,
+                                            "LaserSuppression": false,
+                                            "ExcitationIntensity": 0,
+                                            "Laser": "ArgonRemote",
+                                            "Polarization_Stokes0": 1,
+                                            "Polarization_Stokes1": 1,
+                                            "Polarization_Stokes2": 0,
+                                            "Polarization_Stokes3": 0
+                                        }
+                                    ]
+                                },
+                                "BeamSplitters": {
+                                    "BeamSplitter": [
+                                        {
+                                            "Identifier": "MainBeamSplitterDescanned1",
+                                            "Filter": "MBS 488/561/633",
+                                            "BeamSplitterServoPosition": 0
+                                        },
+                                        {
+                                            "Identifier": "MainBeamSplitterDescanned2",
+                                            "Filter": "Plate",
+                                            "BeamSplitterServoPosition": 0
+                                        },
+                                        {
+                                            "Identifier": "MainBeamSplitterNonDescanned",
+                                            "Filter": "None",
+                                            "BeamSplitterServoPosition": 0
+                                        }
+                                    ]
+                                },
+                                "BleachSetup": null,
+                                "Collimators": {
+                                    "Collimator": [
+                                        {
+                                            "Name": "LSMCOLLI_NLO",
+                                            "Position": 2548
+                                        },
+                                        {
+                                            "Name": "LSMCOLLI_V",
+                                            "Position": 767
+                                        }
+                                    ]
+                                },
+                                "Detectors": {
+                                    "Detector": [
+                                        {
+                                            "DetectorIdentifier": "DescannedPmt1",
+                                            "PureRatioSource": false,
+                                            "ImageChannelName": "Ch1",
+                                            "Voltage": 600,
+                                            "AmplifierGain": 1,
+                                            "AmplifierOffset": 40,
+                                            "PinholeDiameter": 3.28412e-05,
+                                            "SpectralScanChannels": 32,
+                                            "Dye": "Alexa Fluor 488",
+                                            "Folder": "Alexa Fluor 488",
+                                            "Palette": "LsmDetectorPalette_0_0",
+                                            "Color": "#00FF00",
+                                            "DetectorMode": "Integration",
+                                            "DigitalGain": 1,
+                                            "DigitalOffset": 0,
+                                            "LaserSuppression": true,
+                                            "DetectorWavelengthRanges": {
+                                                "DetectorWavelengthRange": {
+                                                    "WavelengthStart": 4.93e-07,
+                                                    "WavelengthEnd": 6.280000000000002e-07
+                                                }
+                                            },
+                                            "Filtersets": {
+                                                "Filterset": null
+                                            },
+                                            "AiryScanMode": "Off",
+                                            "AiryScanVirtualPinholeSize": 1,
+                                            "AiryScanMagnification": 1,
+                                            "AiryScanTransformationXX": 5.21852335e-315,
+                                            "AiryScanTransformationXY": -1.319930636449394e-309,
+                                            "AiryScanTransformationYX": 0.00781250181453823,
+                                            "AiryScanTransformationYY": 1.9400729911467656e-08,
+                                            "Name": "PMT",
+                                            "Id": 250299656312339834731122977435251693019
+                                        },
+                                        {
+                                            "DetectorIdentifier": "DescannedPmt2",
+                                            "PureRatioSource": false,
+                                            "ImageChannelName": "Ch2",
+                                            "Voltage": 773.9285714285725,
+                                            "AmplifierGain": 1,
+                                            "AmplifierOffset": 40,
+                                            "PinholeDiameter": 3.28412e-05,
+                                            "SpectralScanChannels": 32,
+                                            "Dye": "Alexa Fluor 633",
+                                            "Folder": "Alexa Fluor 633",
+                                            "Palette": "LsmDetectorPalette_0_1",
+                                            "Color": "#FF00FF",
+                                            "DetectorMode": "Integration",
+                                            "DigitalGain": 1,
+                                            "DigitalOffset": 0,
+                                            "LaserSuppression": true,
+                                            "DetectorWavelengthRanges": {
+                                                "DetectorWavelengthRange": {
+                                                    "WavelengthStart": 6.380000000000002e-07,
+                                                    "WavelengthEnd": 7.47e-07
+                                                }
+                                            },
+                                            "Filtersets": {
+                                                "Filterset": null
+                                            },
+                                            "AiryScanMode": "Off",
+                                            "AiryScanVirtualPinholeSize": 1,
+                                            "AiryScanMagnification": 1,
+                                            "AiryScanTransformationXX": 5.21852335e-315,
+                                            "AiryScanTransformationXY": -1.319930636449394e-309,
+                                            "AiryScanTransformationYX": 0.00781250181453823,
+                                            "AiryScanTransformationYY": 1.9400729911467656e-08,
+                                            "Name": "PMT",
+                                            "Id": 3697745414114940127220158048011469725209
+                                        }
+                                    ]
+                                },
+                                "CenterWavelength": 5.521072610000002e-07,
+                                "CondensorFrontlensPosition": -1,
+                                "CondensorRevolverFilter": null,
+                                "TubeLensPosition": null,
+                                "FieldStopPosition": -1,
+                                "CondensorAperture": -1,
+                                "FilterTransmission": -1,
+                                "CameraIntegrationTime": 2.048e-06,
+                                "DeviceMode": "LSM",
+                                "TransmittedLightLampIntensity": 0,
+                                "ReflectedLightLampIntensity": -1,
+                                "LaserSuppressionMode": "None",
+                                "TirfAngle": 0,
+                                "PalmSlider": true,
+                                "SimGratingPeriod": 0,
+                                "FWLive405Position": null,
+                                "FWFOVPosition": null,
+                                "Name": "Track 1"
+                            }
+                        },
+                        "TilesSetup": {
+                            "PositionGroups": {
+                                "PositionGroup": {
+                                    "AutoFocusMode": "Off",
+                                    "AutoFocusOffset": 0,
+                                    "TileAcquisitionMode": "CenteredGrid",
+                                    "TilesX": 1,
+                                    "TilesY": 2,
+                                    "TileAcquisitionOverlap": 0.1
+                                }
+                            }
+                        },
+                        "Lasers": {
+                            "Laser": [
+                                {
+                                    "LaserPower": 0.005,
+                                    "LaserName": "HeNe633"
+                                },
+                                {
+                                    "LaserPower": 0.024,
+                                    "LaserName": "ArgonRemote"
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
