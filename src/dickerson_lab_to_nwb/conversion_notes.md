@@ -2,6 +2,17 @@
 
 ## Questions
 * What is the `ROIMask.raw` data for?
+* Are the two channels acquired simultaneously or interleaved?
+* What about the apparent copies of the tiff files on the experiments:
+
+```
+ChanA_001_001_001_239(1).tif
+on:
+/Sample_trial/Sample_1/sample
+```
+
+* Which channel corresponds to which fluorophore? Tdtomato and GCamp
+
 
 ## Description in the the docs File
 
