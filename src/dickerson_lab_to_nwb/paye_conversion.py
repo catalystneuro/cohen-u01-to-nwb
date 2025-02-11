@@ -1,147 +1,87 @@
-import os
-import xml.etree.ElementTree as ET
+from pathlib import Path
 from datetime import datetime
-from typing import Tuple, Optional
+from typing import Optional, Union
+from neuroconv.utils import load_dict_from_file, dict_deep_update
+from pynwb import NWBHDF5IO, NWBFile
 
-import numpy as np
-from PIL import Image
-from neuroconv.datainterfaces.ophys.baseimagingextractorinterface import BaseImagingExtractorInterface
-from neuroconv.utils import FilePathType, DeepDict
-from roiextractors.extraction_tools import PathType
-from roiextractors.imagingextractor import ImagingExtractor
+from .behavior_interface import BehaviorInterface
+from .thor_interface import ThorTiffImagingInterface
 
-from ..cohen_u01_utils.utils import match_paths
-
-
-def extract_experiment_details(xml_file_path: str):
+def convert_session(
+    session_path: Union[str, Path],
+    nwbfile_path: Union[str, Path],
+    metadata: Optional[dict] = None,
+    stub_test: bool = False,
+) -> None:
     """
-    Extract the frameRate from the LSM element and the start time from the Date element.
+    Convert a session to NWB format.
 
     Parameters
     ----------
-    xml_file_path : str
-        Path to the XML file containing the experiment details.
-
-    Returns
-    -------
-    dict
-        A dictionary containing the frameRate and startTime if available.
+    session_path : Union[str, Path]
+        Path to session folder
+    nwbfile_path : Union[str, Path]
+        Path to save NWB file
+    metadata : dict, optional
+        Metadata dictionary
+    stub_test : bool, default: False
+        If True, only write metadata to test conversion
     """
-    # Dictionary to hold the extracted values
-    details = {}
+    session_path = Path(session_path)
+    nwbfile_path = Path(nwbfile_path)
+    
+    # Extract session info from folder name
+    # Example: Tshx18D07_240124_115923_f3_r1
+    session_id = session_path.name
+    
+    # Initialize interfaces
+    behavior_interface = BehaviorInterface(
+        file_path=session_path / f"{session_id}.h5",  # HDF5 file with behavioral data
+        verbose=True
+    )
+    
+    # Find first OME TIFF file
+    first_tiff = session_path / "ChanA_001_001_001_001.tif"
+    if not first_tiff.exists():
+        raise ValueError(f"Could not find first OME TIFF file: {first_tiff}")
+        
+    thor_interface = ThorTiffImagingInterface(
+        file_path=first_tiff,
+        verbose=True
+    )
+    
+    # Get metadata from interfaces
+    metadata = {}
+    metadata.update(behavior_interface.get_metadata())
+    metadata.update(thor_interface.get_metadata())
+    
+    # Create NWB file
+    nwbfile = NWBFile(
+        session_description=f"Payel session {session_id}",
+        identifier=session_id,
+        session_start_time=metadata.get("NWBFile", {}).get("session_start_time", datetime.now()),
+        experimenter="Payel",
+        lab="Dickerson Lab",
+        institution="Case Western Reserve University",
+        experiment_description="Optogenetic stimulation during behavior",
+    )
+    
+    # Add data from interfaces
+    behavior_interface.add_to_nwbfile(nwbfile, metadata=metadata)
+    thor_interface.add_to_nwbfile(nwbfile, metadata=metadata)
+    
+    # Write NWB file
+    nwbfile_path.parent.mkdir(parents=True, exist_ok=True)
+    with NWBHDF5IO(nwbfile_path, mode="w") as io:
+        io.write(nwbfile)
 
-    # Parse the XML file
-    tree = ET.parse(xml_file_path)
-    root = tree.getroot()
-
-    # Extract frameRate from the LSM element
-    lsm_element = root.find(".//LSM")
-    if lsm_element is not None and "frameRate" in lsm_element.attrib:
-        details["frameRate"] = float(lsm_element.attrib["frameRate"])
-
-    # Extract startTime from the Date element
-    date_element = root.find(".//Date")
-    if date_element is not None and "date" in date_element.attrib:
-        date_str = date_element.attrib["date"]
-        details["startTime"] = datetime.strptime(date_str, "%m/%d/%Y %H:%M:%S")
-
-    return details
-
-
-class ThorTiffImagingExtractor(ImagingExtractor):
-    """A ImagingExtractor for multiple TIFF files."""
-
-    extractor_name = "ThorTiffImaging"
-    is_writable = False
-
-    def __init__(self, folder_path: PathType, pattern="{channel}_001_001_001_{frame:d}.tif"):
-        """Create a ThorTiffImagingExtractor instance from a TIFF file.
-
-        Parameters
-        ----------
-        folder_path : str
-            List of path to each TIFF file.
-        """
-
-        super().__init__()
-        self.folder_path = folder_path
-
-        paths = match_paths(folder_path, pattern)
-
-        channels = list(set(x["channel"] for x in paths.values()))
-
-        self._video = {}
-        for channel in channels:
-            data = []
-            for fpath in paths:
-                img = Image.open(fpath)
-                data.append(np.array(img))
-            self._video[channel] = np.array(data)
-
-        shape = self._video[channels[0]].shape
-        self._num_frames, self._num_rows, self._num_columns = shape
-        self._num_channels = len(channels)
-        self._channel_names = channels
-
-        extracted_metadata = extract_experiment_details(os.path.join(folder_path, "Experiment.xml"))
-        self._sampling_frequency = extracted_metadata.get("frameRate", None)
-        self.start_time = extracted_metadata.get("startTime", None)
-
-        self._kwargs = {"folder_path": folder_path}
-
-    def get_frames(self, frame_idxs, channel: int = 0):
-        return self._video[channel][frame_idxs, ...]
-
-    def get_video(self, start_frame=None, end_frame=None, channel: Optional[int] = 0) -> np.ndarray:
-        return self._video[channel][start_frame:end_frame, ...]
-
-    def get_image_size(self) -> Tuple[int, int]:
-        return self._num_rows, self._num_columns
-
-    def get_num_frames(self):
-        return self._num_frames
-
-    def get_sampling_frequency(self):
-        return self._sampling_frequency
-
-    def get_num_channels(self):
-        return self._num_channels
-
-    def get_channel_names(self):
-        return self._channel_names
-
-
-class ThorTiffImagingInterface(BaseImagingExtractorInterface):
-    """Interface for multi-page TIFF files."""
-
-    display_name = "ThorLabs TIFF Imaging"
-    Extractor = ThorTiffImagingExtractor
-
-    @classmethod
-    def get_source_schema(cls) -> dict:
-        source_schema = super().get_source_schema()
-        source_schema["properties"]["folder_path"]["description"] = (
-            "Directory that contains the TIFF files and " "Experiment.xml file. "
-        )
-        return source_schema
-
-    def __init__(self, folder_path: FilePathType, verbose: bool = False):
-        """
-        Initialize reading of TIFF file.
-
-        Parameters
-        ----------
-        folder_path : FilePathType
-        verbose : bool, default: False
-        """
-        super().__init__(folder_path=folder_path, verbose=verbose)
-
-    def get_metadata(self, photon_series_type="TwoPhotonSeries") -> DeepDict:
-        metadata = super().get_metadata(photon_series_type=photon_series_type)
-        metadata["NWBFile"]["session_start_time"] = self.extractor.start_time
-        return metadata
-
-
-folder_path = "/Users/bendichter/Downloads/Dickerson Lab/Sample_trial-20240508T162829Z-001/Sample_trial/sample/"
-
-ThorTiffImagingInterface(folder_path=folder_path)
+if __name__ == "__main__":
+    # Test the conversion with a sample session
+    session_path = Path("/path/to/session/Tshx18D07_240124_115923_f3_r1")
+    nwbfile_path = Path("test_conversion.nwb")
+    
+    convert_session(
+        session_path=session_path,
+        nwbfile_path=nwbfile_path,
+        stub_test=True  # Set to False for full conversion
+    )
