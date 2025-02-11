@@ -83,7 +83,7 @@ with tf.TiffFile("ChanA_001_001_001_001.tif") as tif:
 - **Visual Stimulus 2**: Same as Visual Stimulus 1, but in Y-direction.
 - **FrameCounter**: Time-stamps at which the frames are recorded (Frames are recorded at 4 Hz).
 
-They are accssible in the HDF5 file under the following paths:
+They are accessible in the HDF5 file under the following paths:
 
 ```python
 
@@ -105,11 +105,11 @@ frame_counter
 <HDF5 dataset "FrameCounter": shape (8472000, 1), type "<u4">
 
 left_minus_right_wing_beat = f["AI"]['LeftMinusRightWingBeatAmpltude']
-left_wing_beatu_amplitude = f["AI"]['LeftWingBeatAmplitude']
+left_wing_beat_amplitude = f["AI"]['LeftWingBeatAmplitude']
 visual_stimulus1 = f["AI"]['VisualStimulus1']
 visual_stimulus2 = f["AI"]['VisualStimulus2']
 
-left_minus_right_wing_beat.shape, left_wing_beatu_amplitude.shape, visual_stimulus1.shape, visual_stimulus2.shape
+left_minus_right_wing_beat.shape, left_wing_beat_amplitude.shape, visual_stimulus1.shape, visual_stimulus2.shape
 
 ((8472000, 1), (8472000, 1), (8472000, 1), (8472000, 1))
 

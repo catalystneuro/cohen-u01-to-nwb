@@ -9,7 +9,7 @@ from .thor_interface import ThorTiffImagingInterface
 
 def convert_session(
     session_path: Union[str, Path],
-    nwbfile_path: Union[str, Path],
+    output_folder_path: Union[str, Path],
     metadata: Optional[dict] = None,
     stub_test: bool = False,
 ) -> None:
@@ -28,7 +28,7 @@ def convert_session(
         If True, only write metadata to test conversion
     """
     session_path = Path(session_path)
-    nwbfile_path = Path(nwbfile_path)
+    output_folder_path = Path(output_folder_path)
     
     # Extract session info from folder name
     # Example: Tshx18D07_240124_115923_f3_r1
@@ -71,17 +71,22 @@ def convert_session(
     thor_interface.add_to_nwbfile(nwbfile, metadata=metadata)
     
     # Write NWB file
+    nwbfile_path = output_folder_path / f"{session_id}.nwb"
     nwbfile_path.parent.mkdir(parents=True, exist_ok=True)
     with NWBHDF5IO(nwbfile_path, mode="w") as io:
         io.write(nwbfile)
 
 if __name__ == "__main__":
     # Test the conversion with a sample session
-    session_path = Path("/path/to/session/Tshx18D07_240124_115923_f3_r1")
-    nwbfile_path = Path("test_conversion.nwb")
+    base_folder_path = Path("/home/heberto/cohen_project/Sample data/Dickerson Lab/data_google_drive/")
+    session_path = Path("/home/heberto/cohen_project/Sample data/Dickerson Lab/data_google_drive/Sample_trial/Sample_1")
+    output_folder_path = Path("/home/heberto/cohen_project/Sample data/Dickerson Lab/nwb_files")
+    
+    h5_file_behavior_path = base_folder_path / "Sample_trial/Sample_1/Animal_1_Trial_6000/" / "Episode001.h5.h5"
+    assert h5_file_behavior_path.is_file()
     
     convert_session(
         session_path=session_path,
-        nwbfile_path=nwbfile_path,
+        output_folder_path=output_folder_path,
         stub_test=True  # Set to False for full conversion
     )
