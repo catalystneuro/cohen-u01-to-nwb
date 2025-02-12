@@ -12,6 +12,7 @@ on:
 ```
 
 * Which channel corresponds to which fluorophore? Tdtomato and GCamp
+* What Microscope is being used? What is the name of the device?
 
 
 ## Description in the the docs File
