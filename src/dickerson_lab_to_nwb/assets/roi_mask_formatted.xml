@@ -1,0 +1,71 @@
+<ROICapsule xmlns="clr-namespace:OverlayManager;assembly=OverlayManager"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:s="clr-namespace:System;assembly=mscorlib">
+
+    <ROICapsule.ROIs>
+        <x:Array Type="av:Shape">
+            <ROIRect BottomLeft="271.44988250103,261.79574981781"
+                     BottomRight="450.27020327309,261.79574981781"
+                     EndPoint="450.27020327309,261.79574981781"
+                     ROIHeight="135.55733994011"
+                     ROIWidth="178.82032077205997"
+                     StartPoint="271.44988250103,126.2384098777"
+                     TopLeft="271.44988250103,126.2384098777"
+                     TopRight="450.27020327309,126.2384098777"
+                     Fill="#00FFFFFF"
+                     Stroke="#FFFFFF00"
+                     StrokeThickness="1"
+                     ToolTip="ROI #1">
+                
+                <ROIRect.Tag>
+                    <x:Array Type="s:Int32">
+                        <s:Int32>687865856</s:Int32>
+                        <s:Int32>0</s:Int32>
+                        <s:Int32>0</s:Int32>
+                        <s:Int32>60</s:Int32>
+                        <s:Int32>1</s:Int32>
+                        <s:Int32>65535</s:Int32>
+                    </x:Array>
+                </ROIRect.Tag>
+
+            </ROIRect>
+        </x:Array>
+    </ROICapsule.ROIs>
+
+    <ROICapsule.ScanAreaROIs>
+        <x:Array Type="av:Shape">
+            <ROIRect BottomLeft="271.44988250103,261.79574981781"
+                     BottomRight="450.27020327309,261.79574981781"
+                     EndPoint="450.27020327309,261.79574981781"
+                     ROIHeight="135.55733994011"
+                     ROIWidth="178.82032077205997"
+                     StartPoint="271.44988250103,126.2384098777"
+                     TopLeft="271.44988250103,126.2384098777"
+                     TopRight="450.27020327309,126.2384098777"
+                     Fill="#00FFFFFF"
+                     Stroke="#FFFFFF00"
+                     StrokeThickness="1"
+                     ToolTip="ROI #1">
+
+                <ROIRect.Tag>
+                    <x:Array Type="s:Int32">
+                        <s:Int32>0</s:Int32>
+                        <s:Int32>0</s:Int32>
+                        <s:Int32>57</s:Int32>
+                        <s:Int32>0</s:Int32>
+                        <s:Int32>0</s:Int32>
+                        <s:Int32>512</s:Int32>
+                        <s:Int32>512</s:Int32>
+                        <s:Int32>0</s:Int32>
+                        <s:Int32>4</s:Int32>
+                        <s:Int32>1</s:Int32>
+                        <s:Int32>60</s:Int32>
+                    </x:Array>
+                </ROIRect.Tag>
+
+            </ROIRect>
+        </x:Array>
+    </ROICapsule.ScanAreaROIs>
+
+</ROICapsule>
