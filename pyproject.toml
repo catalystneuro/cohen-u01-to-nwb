@@ -20,7 +20,7 @@ dependencies = [
   "roiextractors",
   "tifffile",  # For reading tiffs
   "pymatreader", # For reading matlab
-  "skimage", # for the Kim lab conversion polygon mask
+  "scikit-image", # for the Kim lab conversion polygon mask
   "lxml", # For Dickerson lab conversion
 ]
 

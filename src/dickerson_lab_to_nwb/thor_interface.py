@@ -349,7 +349,8 @@ class ThorImagingInterface(BaseImagingExtractorInterface):
         verbose : bool, default: False
         """
         super().__init__(file_path=file_path, channel_name=channel_name, verbose=verbose)
-
+        self.channel_name  = channel_name
+        
     def get_metadata(self) -> DeepDict:
         metadata = super().get_metadata()
         
@@ -395,6 +396,10 @@ class ThorImagingInterface(BaseImagingExtractorInterface):
                 
                 # Get wavelength info and map channels to indicators
                 wavelengths = root.find(".//Wavelengths")
+                
+                to_camel_case = lambda s: s.split('_')[0] + ''.join(x.title() for x in s.split('_')[1:])
+                ChannelName = to_camel_case(self.channel_name)
+
                 if wavelengths is not None:
                     channel_elements = wavelengths.findall(".//Wavelength")
                     optical_channels = []
@@ -410,30 +415,38 @@ class ThorImagingInterface(BaseImagingExtractorInterface):
                         })
                 
                 # ImagingPlane metadata
-                metadata["Ophys"]["ImagingPlane"] = [{
-                    "name": "ImagingPlane",
+                indicator = channel_indicators.get(self.channel_name, "unknown")
+                
+                imaging_plane_name = f"ImagingPlane{ChannelName}"
+                channel_imaging_plane_metadata = {
+                    "name": imaging_plane_name,
                     "optical_channel": optical_channels,
                     "description": "2P Imaging Plane",
                     "device": "ThorMicroscope",
                     "excitation_lambda": 920.0,  # Placeholder
-                    "indicator": "tdTomato and GCaMP",
-                    "location": "unknown",
+                    "indicator": indicator,
+                    "location": "unknown",  # TODO: can it be extracted from the ome xml?
                     "grid_spacing": [pixel_size * 1e-6, pixel_size * 1e-6],  # Convert to meters
                     "grid_spacing_unit": "meters",
                     "imaging_rate": frame_rate
-                }]
+                }
+                metadata["Ophys"]["ImagingPlane"] = [channel_imaging_plane_metadata]
                 
                 # TwoPhotonSeries metadata
                 selected_channel = self.source_data.get("channel_name")
                 pmt_gain = pmt_gains.get(selected_channel) if selected_channel else None
-                
-                metadata["Ophys"]["TwoPhotonSeries"] = [{
-                    "name": "TwoPhotonSeries",
-                    "imaging_plane": "ImagingPlane",
+
+                two_photon_series_name = f"TwoPhotonSeries{ChannelName}"
+                two_photon_series_metadata = {
+                    "name": two_photon_series_name,
+                    "imaging_plane": imaging_plane_name,
                     "field_of_view": [width_um * 1e-6, height_um * 1e-6],  # Convert to meters
                     "pmt_gain": pmt_gain,
                     "scan_line_rate": frame_rate * float(lsm.get("pixelY", 0)),
                     "unit": "n.a."
-                }]
+                }
+                
+
+                metadata["Ophys"]["TwoPhotonSeries"] = [two_photon_series_metadata]
 
         return metadata
