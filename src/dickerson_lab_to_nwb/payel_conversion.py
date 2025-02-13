@@ -41,21 +41,30 @@ def convert_session(
         file_path=thor_first_tiff_file_path, channel_name="ChanB", verbose=True
     )
 
+
     converter = ConverterPipe(
-        data_interfaces=[
-            thor_interface_channel_A,
-            thor_interface_channel_B,
-            behavior_interface,
-        ]
+        data_interfaces={
+            "ThorChanA": thor_interface_channel_A,
+            "ThorChanB": thor_interface_channel_B,
+            "Behavior": behavior_interface,
+        }
     )
+
+    conversion_options = {
+        "ThorChanA": dict(stub_test=stub_test, photon_series_index=0),
+        "ThorChanB": dict(stub_test=stub_test, photon_series_index=1),
+    }
 
     metadata = converter.get_metadata()
 
-    # Add time zone to session start time
+    nwbfile_path = output_folder_path / f"{session_id}.nwb"
+    nwbfile_path.parent.mkdir(parents=True, exist_ok=True)
 
     converter.run_conversion(
-        nwbfile_path=output_folder_path / f"{session_id}.nwb",
+        nwbfile_path=nwbfile_path,
         metadata=metadata,
+        conversion_options=conversion_options,
+        overwrite=True,
     )
 
 
@@ -64,6 +73,7 @@ if __name__ == "__main__":
     base_folder_path = Path("/home/heberto/cohen_project/Sample data/Dickerson Lab/data_google_drive/")
     session_path = Path("/home/heberto/cohen_project/Sample data/Dickerson Lab/data_google_drive/Sample_trial/Sample_1")
     output_folder_path = Path("/home/heberto/cohen_project/Sample data/Dickerson Lab/nwb_files")
+
 
     thor_first_tiff_file_path = base_folder_path / "Sample_trial/Sample_1/sample/ChanA_001_001_001_001.tif"
     assert thor_first_tiff_file_path.is_file()
