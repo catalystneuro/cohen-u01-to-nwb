@@ -18,9 +18,10 @@ dependencies = [
   "neuroconv[video]",
   "nwbinspector",
   "roiextractors",
-  "tifffile",
-  "pymatreader",
-  "skimage", # for the Kim lab conversion polygon mask
+  "tifffile",  # For reading tiffs
+  "pymatreader", # For reading matlab
+  "scikit-image", # for the Kim lab conversion polygon mask
+  "lxml", # For Dickerson lab conversion
 ]
 
 [project.urls]
