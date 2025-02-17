@@ -9,13 +9,35 @@ The current structure of the shared data is the following. Each bullet point is 
 * Free Flight Optogenetics Data (This contains the data we are working with)
 * Optogenetics and Mechanical Perturbation Data (Empty)
 
+A similar experiment can be found in:
+
+> Whitehead, Samuel C., et al. "Neuromuscular embodiment of feedback control elements in Drosophila flight." Science Advances 8.50 (2022): eabo7461.
 
 ## Questions
 * How to align the mp4 movies with the data in the matlab files? My understanding is that they take the data from the phantom camera which records only when the flies are in view. The phantom camera is at 8000 fps and the videos are 30 fps but there are around 2301 frames in the videos and 401 timestamps in the matlab files. The timestamps cover a range from -10 milliseconds to around 50 milliseconds (so 50 milliseconds total) whereas the videos last like 1 minutes and and seventeen seconds.
 
 If they really store all the frames of the phantom in the videos, that means that the duration between frames is 1 / 8000 ~ 0.125 milliseconds. So, the 2301 frames in the video should be around 287 milliseconds. The range on the matlab files is 60 milliseconds so the videos are longer.
 
+Answer after the meeting on the 17 of February:
+They have a detection mechanism that uses two lasers that intersect at the middle and photodiodes.
+This allows them to trigger camera recording when the fly is in the middle of the intersection of the lasers.
 
+The camera frames goes from -500 to 1800 frames. The data on the matlab structure sometimes does not correspond to all the data on the video, so sometimes the start is trimmed. That means that the video starts before the data. They will add the frame of the video that corresponds to the first timestamps (the `t` on the data structure) to each of the rows.
+
+
+* What is the location of the stimulation? 
+They will send it
+* Why is the unit milliwatt per square millimeters?
+This is more useful. See discussion here:
+https://github.com/NeurodataWithoutBorders/nwb-schema/issues/609
+* Can we get a table instead of a plot?
+They will send it over
+* Is the stimuli constant in the other experiments?
+Yes. Within an experiment it is constant.
+* Are you gona have imaging series data on other experiments?
+No, only the confocal data.
+* What do you use the confocal image for?
+For immunohistochemistry. See the paper reference at the top. Basically, they use it to confirm that the optogenetic protocol worked. This should be a single image in a single nwbfile.
 
 ## Free Flight Optogenetics Data
 
@@ -87,6 +109,7 @@ The LED intensities are controlled by changing the amount of current that is dri
 
 ![LED Calibration Curve](assets/LED_calibration_curve.png)
 
+#### Questions
 
 ### mp4 movies
 Some metadata for two of the videos:
@@ -105,7 +128,7 @@ Command: 	 ffprobe -v error -select_streams v:0 -count_frames -show_entries stre
 2301 (number of frames)
 ```
 
-Now, the question is to which interval of the experimen they belong to?
+Now, the question is to which interval of the experiment they belong to?
 
 
 The movies have 2301 frames
