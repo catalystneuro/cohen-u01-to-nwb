@@ -22,6 +22,7 @@ dependencies = [
   "pymatreader", # For reading matlab
   "scikit-image", # for the Kim lab conversion polygon mask
   "lxml", # For Dickerson lab conversion
+  "czifile", # for the Cohen lab conversion confocal images
 ]
 
 [project.urls]
