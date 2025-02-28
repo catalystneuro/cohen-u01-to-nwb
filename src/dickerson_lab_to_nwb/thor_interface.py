@@ -16,22 +16,22 @@ from neuroconv.utils import FilePathType, DeepDict, PathType
 class ThorTiffImagingExtractor(ImagingExtractor):
     """
     An ImagingExtractor for multiple TIFF files using OME metadata.
-    
-    
+
+
     This extractor builds a mapping between the T (time) dimension and the corresponding
     pages/IFD or the tiff files using a named tuple structure:
-    
-    For each time frame (T), we record a list of PageMapping objects that corresponds to the 
+
+    For each time frame (T), we record a list of PageMapping objects that corresponds to the
     pages of the tiff file that contain the image data for that frame.
-    
+
     Each PageMapping object contains:
       - page_index: The index of the page in the TIFF file (which holds the complete X and Y image data),
       - channel_index: The coordinate along the channel (C) axis (or None if absent),
       - depth_index: The coordinate along the depth (Z) axis (or None if absent).
 
     When get_frames() is called, the mapping is used to load only the pages for the requested
-    frames into a preallocated NumPy array. 
-    
+    frames into a preallocated NumPy array.
+
     Note: According to the OME specification (see
     https://www.openmicroscopy.org/Schemas/Documentation/Generated/OME-2016-06/ome_xsd.html#Pixels_DimensionOrder),
     the spatial dimensions (X and Y) are always stored on a single page.
@@ -42,19 +42,6 @@ class ThorTiffImagingExtractor(ImagingExtractor):
 
     # Named tuple to hold page mapping details.
     PageMapping = namedtuple("PageMapping", ["page_index", "channel_index", "depth_index"])
-
-    @staticmethod
-    def _parse_ome_metadata(metadata_string: str) -> ET._Element:
-        """
-        Parse an OME metadata string using lxml.etree.
-        Removes XML comments if present and attempts to parse as bytes first.
-        """
-        if metadata_string.lstrip().startswith("<!--"):
-            metadata_string = metadata_string.replace("<!--", "").replace("-->", "")
-        try:
-            return ET.fromstring(metadata_string.encode("utf-8"))
-        except ValueError:
-            return ET.fromstring(metadata_string)
 
     def __init__(self, file_path: Union[str, Path], channel_name: Optional[str] = None):
         """
@@ -84,10 +71,12 @@ class ThorTiffImagingExtractor(ImagingExtractor):
             self._num_z = int(pixels_element.get("SizeZ", "1"))
             self._dimension_order = pixels_element.get("DimensionOrder")
 
+            # Series is a concept from the tifffile library.
+            # It indexes all the data across pages and files 
             series = tiff_reader.series[0]
             self._dtype = series.dtype
             number_of_pages = len(series)
-            series_axes = series.axes  # e.g., "XYZTC" or "XYCZT"
+            series_axes = series.axes # "XYZTC" or "XYCZT" Note this is different from OME metadata as this is data layout
             series_shape = series.shape
 
         # Determine non-spatial axes (remove X and Y).
@@ -95,7 +84,7 @@ class ThorTiffImagingExtractor(ImagingExtractor):
         non_spatial_shape = [dim for axis, dim in zip(series_axes, series_shape) if axis not in ("X", "Y")]
 
         if "T" not in non_spatial_axes:
-            raise ValueError("The TIFF file must have a T (time) dimension. Static images are not supported.")
+            raise ValueError("The TIFF file must have a T (time) dimension. Image stack mode is not supported.")
 
         total_expected_pages = np.prod(non_spatial_shape)
         if total_expected_pages != number_of_pages:
@@ -114,12 +103,8 @@ class ThorTiffImagingExtractor(ImagingExtractor):
         for page_index in range(number_of_pages):
             page_multi_index = np.unravel_index(page_index, non_spatial_shape, order="C")
             time_index = page_multi_index[self._time_axis_index]
-            channel_index = (
-                page_multi_index[self._channel_axis_index] if self._channel_axis_index is not None else None
-            )
-            depth_index = (
-                page_multi_index[self._z_axis_index] if self._z_axis_index is not None else None
-            )
+            channel_index = page_multi_index[self._channel_axis_index] if self._channel_axis_index is not None else None
+            depth_index = page_multi_index[self._z_axis_index] if self._z_axis_index is not None else None
             mapping_entry = ThorTiffImagingExtractor.PageMapping(
                 page_index=page_index, channel_index=channel_index, depth_index=depth_index
             )
@@ -167,7 +152,23 @@ class ThorTiffImagingExtractor(ImagingExtractor):
             # If Experiment.xml is missing, set defaults.
             self._sampling_frequency = None
             self._channel_names = []
-    
+
+    @staticmethod
+    def _parse_ome_metadata(metadata_string: str) -> ET._Element:
+        """
+        Parse an OME metadata string using lxml.etree.
+        Removes XML comments if present and attempts to parse as bytes first.
+
+        In the old version of ome tiff the metadata is stored as a comment. In the new version, the metadata
+        is stored as an utf-8 encoded xml string.
+        """
+        if metadata_string.lstrip().startswith("<!--"):
+            metadata_string = metadata_string.replace("<!--", "").replace("-->", "")
+        try:
+            return ET.fromstring(metadata_string.encode("utf-8"))
+        except ValueError:
+            return ET.fromstring(metadata_string)
+
     def get_frames(self, frame_idxs: List[int]) -> np.ndarray:
         """
         Get specific frames by their time indices.
@@ -193,8 +194,11 @@ class ThorTiffImagingExtractor(ImagingExtractor):
             number_of_z_planes = self._num_z if has_z_dimension else 1
 
             n_frames = len(frame_idxs)
-            output_shape = (n_frames, image_height, image_width, number_of_z_planes) if has_z_dimension \
+            output_shape = (
+                (n_frames, image_height, image_width, number_of_z_planes)
+                if has_z_dimension
                 else (n_frames, image_height, image_width)
+            )
             output_array = np.empty(output_shape, dtype=data_type)
 
             for frame_counter, frame_idx in enumerate(frame_idxs):
@@ -218,9 +222,7 @@ class ThorTiffImagingExtractor(ImagingExtractor):
                         output_array[frame_counter, :, :, depth_counter] = page_data
                 else:
                     if len(page_mappings) != 1:
-                        raise ValueError(
-                            f"Expected 1 page for frame {frame_idx} but got {len(page_mappings)}."
-                        )
+                        raise ValueError(f"Expected 1 page for frame {frame_idx} but got {len(page_mappings)}.")
                     single_page_index = page_mappings[0].page_index
                     page_data = series.pages[single_page_index].asarray()
                     output_array[frame_counter, :, :] = page_data
@@ -257,9 +259,6 @@ class ThorTiffImagingExtractor(ImagingExtractor):
     def get_channel_names(self) -> List[str]:
         """Return the channel names."""
         return self._channel_names
-    
-        """Return the channel names."""
-        return self._channel_names
 
     def get_dtype(self):
         return self._dtype
@@ -269,6 +268,7 @@ class ThorImagingInterface(BaseImagingExtractorInterface):
     """
     Interface for Thor TIFF files with OME metadata.
     """
+
     display_name = "ThorLabs TIFF Imaging"
     Extractor = ThorTiffImagingExtractor
 
@@ -277,12 +277,12 @@ class ThorImagingInterface(BaseImagingExtractorInterface):
         source_schema = super().get_source_schema()
         source_schema["properties"]["file_path"] = {
             "type": "string",
-            "description": "Path to first OME TIFF file (e.g., ChanA_001_001_001_001.tif)"
+            "description": "Path to first OME TIFF file (e.g., ChanA_001_001_001_001.tif)",
         }
         source_schema["properties"]["channel_name"] = {
             "type": "string",
             "description": "Name of the channel to extract (must match name in Experiment.xml)",
-            "required": False
+            "required": False,
         }
         return source_schema
 
@@ -314,10 +314,7 @@ class ThorImagingInterface(BaseImagingExtractorInterface):
             self.session_start_time = datetime.strptime(date_attribute, "%m/%d/%Y %H:%M:%S")
             metadata["NWBFile"]["session_start_time"] = self.session_start_time
 
-            metadata.setdefault("Ophys", {})["Device"] = [{
-                "name": "ThorMicroscope",
-                "description": device_description
-            }]
+            metadata.setdefault("Ophys", {})["Device"] = [{"name": "ThorMicroscope", "description": device_description}]
 
             # LSM metadata
             lsm = root.find(".//LSM")
@@ -344,16 +341,18 @@ class ThorImagingInterface(BaseImagingExtractorInterface):
                     for channel in channel_elements:
                         name = channel.get("name", "")
                         indicator = channel_indicators.get(name, "unknown")
-                        optical_channels.append({
-                            "name": name,
-                            "description": f"{indicator} channel",
-                            "emission_lambda": 520.0  # Placeholder
-                        })
+                        optical_channels.append(
+                            {
+                                "name": name,
+                                "description": f"{indicator} channel",
+                                "emission_lambda": 520.0,  # Placeholder
+                            }
+                        )
 
                 # Helper to convert to CamelCase
                 def to_camel_case(s: str) -> str:
-                    parts = s.split('_')
-                    return parts[0] + ''.join(word.title() for word in parts[1:])
+                    parts = s.split("_")
+                    return parts[0] + "".join(word.title() for word in parts[1:])
 
                 ChannelName = to_camel_case(self.channel_name) if self.channel_name else "Default"
 
@@ -368,7 +367,7 @@ class ThorImagingInterface(BaseImagingExtractorInterface):
                     "location": "unknown",  # TODO: Extract if possible.
                     "grid_spacing": [pixel_size * 1e-6, pixel_size * 1e-6],  # Convert um to meters
                     "grid_spacing_unit": "meters",
-                    "imaging_rate": frame_rate
+                    "imaging_rate": frame_rate,
                 }
                 metadata["Ophys"]["ImagingPlane"] = [channel_imaging_plane_metadata]
 
@@ -382,7 +381,7 @@ class ThorImagingInterface(BaseImagingExtractorInterface):
                     "field_of_view": [width_um * 1e-6, height_um * 1e-6],  # Convert um to meters
                     "pmt_gain": pmt_gain,
                     "scan_line_rate": frame_rate * float(lsm.get("pixelY", 0)),
-                    "unit": "n.a."
+                    "unit": "n.a.",
                 }
                 metadata["Ophys"]["TwoPhotonSeries"] = [two_photon_series_metadata]
 
