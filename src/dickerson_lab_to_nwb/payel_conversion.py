@@ -41,12 +41,15 @@ def convert_session(
         file_path=thor_first_tiff_file_path, channel_name="ChanB", verbose=True
     )
 
+    from neuroconv.datainterfaces import Suite2pSegmentationInterface
+    suit_2p_interface = Suite2pSegmentationInterface(folder_path="place_where_suit2p_files_are")
 
     converter = ConverterPipe(
         data_interfaces={
             "ThorChanA": thor_interface_channel_A,
             "ThorChanB": thor_interface_channel_B,
             "Behavior": behavior_interface,
+            "Suite2P": suit_2p_interface,
         }
     )
 

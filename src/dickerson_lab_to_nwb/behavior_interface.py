@@ -56,13 +56,13 @@ class BehaviorInterface(BaseDataInterface):
             # Timestamps
             frame_counter = f["CI"]["FrameCounter"]    
             # From personal communication we know that frames are recorded at 4 Hz
-            timestamps = frame_counter[:].squeeze() / 4.0
+            sampling_rate = 4.0
+            timestamps = frame_counter[:].squeeze() / sampling_rate  # (frames / (frames / seconds))
             
             
-            # WinbBeat
-    
+            # WingBeat
             left_wing_beat_amplitude = f["AI"]["LeftWingBeatAmplitude"][:].squeeze()
-            left_minus_right_wing_beat = f["AI"]["LeftMinusRightWingBeatAmpltude"][:].squeeze()
+            left_minus_right_wing_beat = f["AI"]["LeftMinusRightWingBeatAmplitude"][:].squeeze()
 
             left_wing_beat_amplitude_ts = TimeSeries(
                 name="LeftWingBeatAmplitudeTimeSeries",
