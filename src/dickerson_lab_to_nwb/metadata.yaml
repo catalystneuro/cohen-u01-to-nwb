@@ -20,5 +20,4 @@ Subject:
   sex: F
   age: P3D  # 3 days post eclosion
   species: Drosophila melanogaster
-  date_of_birth: 2014-06-22 00:00:00-04:00  # Example
   genotype: UAS-GCamp7f/TdTomato x Gal4-R22H05
