@@ -13,10 +13,12 @@ NWBFile:
   experimenter:
     - Chatterjee, Payel
     - Dickerson, Brad 
-    - Last Name, Involved
+    - Last Name, First Name # Add here
   surgery: To fill with description
 Subject:
   subject_id: "fly-x"  # To add more specific if you have it
   sex: F
+  age: P3D  # 3 days post eclosion
   species: Drosophila melanogaster
   date_of_birth: 2014-06-22 00:00:00-04:00  # Example
+  genotype: UAS-GCamp7f/TdTomato x Gal4-R22H05

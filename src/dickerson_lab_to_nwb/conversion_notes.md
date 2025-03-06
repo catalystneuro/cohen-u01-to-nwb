@@ -27,15 +27,6 @@ Description of folder: Each folder has two sub-folders. The sample subfolder has
 
 ## Flourophores
 
-```
-tdTomato (a red fluorescent protein)
-Excitation peak (λ_ex): ~554 nm
-Emission peak (λ_em): ~581 nm
-GCaMP (a calcium indicator based on GFP)
-Excitation peak (λ_ex): ~480 nm
-Emission peak (λ_em): ~510 nm
-```
-
 ## Thor Format
 
 I believe the files were produced with the ThorImage®LS device. From the specification on its [corresponding website](https://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=9072#ad-image-0):
