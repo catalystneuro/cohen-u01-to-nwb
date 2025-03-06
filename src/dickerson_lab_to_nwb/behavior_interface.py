@@ -59,10 +59,10 @@ class BehaviorInterface(BaseDataInterface):
             sampling_rate = 4.0
             timestamps = frame_counter[:].squeeze() / sampling_rate  # (frames / (frames / seconds))
             
-            
             # WingBeat
+            
             left_wing_beat_amplitude = f["AI"]["LeftWingBeatAmplitude"][:].squeeze()
-            left_minus_right_wing_beat = f["AI"]["LeftMinusRightWingBeatAmplitude"][:].squeeze()
+            left_minus_right_wing_beat = f["AI"]["LeftMinusRightWingBeatAmpltude"][:].squeeze()  # The typo is on the file
 
             left_wing_beat_amplitude_ts = TimeSeries(
                 name="LeftWingBeatAmplitudeTimeSeries",
@@ -91,7 +91,8 @@ class BehaviorInterface(BaseDataInterface):
             description = (
                 "Analog output from the controller of the visual arena feeding "
                 "information about the pattern/bar movement in the X and Y direction "
-                "to Thorsync using the same breakout box."
+                "to Thorsync using the same breakout box. "
+                "The stimuli is 6-pixel wide light bar on a dark background"
             )
             
             visual_stimuli_stack = np.stack((visual_stimulus_x[:], visual_stimulus_y[:]), axis=1).squeeze()

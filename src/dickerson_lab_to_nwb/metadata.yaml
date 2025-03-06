@@ -1,0 +1,22 @@
+NWBFile:
+  keywords:
+    - keyword 1
+    - keyword 2
+    - keyword 3
+  related_publications:
+    - To fill if it exists
+  session_description:
+    A rich text description of the experiment. Can also just be the abstract of the publication.
+  experiment_description: 'Task description.'
+  institution:  Princeton
+  lab: Dickerson
+  experimenter:
+    - Chatterjee, Payel
+    - Dickerson, Brad 
+    - Last Name, Involved
+  surgery: To fill with description
+Subject:
+  subject_id: "fly-x"  # To add more specific if you have it
+  sex: F
+  species: Drosophila melanogaster
+  date_of_birth: 2014-06-22 00:00:00-04:00  # Example

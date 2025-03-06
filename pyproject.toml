@@ -17,7 +17,7 @@ classifiers = [
 dependencies = [
   "neuroconv[video]",
   "nwbinspector",
-  "roiextractors",
+  "roiextractors>=0.5.11",  # Needed for Thor extractor
   "tifffile",  # For reading tiffs
   "pymatreader", # For reading matlab
   "scikit-image", # for the Kim lab conversion polygon mask
