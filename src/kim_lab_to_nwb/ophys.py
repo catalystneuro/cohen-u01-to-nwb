@@ -12,8 +12,29 @@ from pynwb import NWBFile
 from pynwb.ophys import PlaneSegmentation, ImageSegmentation, RoiResponseSeries, ImagingPlane, OpticalChannel
 from pynwb.device import Device
 from pymatreader import read_mat
+from pynwb.ophys import DfOverF
 
 from cohen_u01_nwb_conversion_utils.utils import match_paths
+
+from neuroconv import ConverterPipe
+
+
+class ScanImageConverter(ConverterPipe):
+    """Convert ScanImage data to NWB format."""
+
+    def __init__(self, file_path: FilePathType, sampling_frequency: float = 30.0):
+        """
+        Initialize the converter.
+
+        Parameters
+        ----------
+        file_path : str
+            Path to the ScanImage file.
+        sampling_frequency : float
+            Sampling frequency in Hz.
+        """
+
+        return None
 
 
 class MultiTiffMultiPageTiffImagingExtractor(ImagingExtractor):
@@ -43,11 +64,11 @@ class MultiTiffMultiPageTiffImagingExtractor(ImagingExtractor):
         self.page_tracker = []
         page_counter = 0
         for file_path in tqdm(self.tif_paths, "extracting page lengths"):
-            #print(f"{file_path=}")
+            # print(f"{file_path=}")
             with TiffFile(file_path) as tif:
                 self.page_tracker.append(page_counter)
                 page_counter += len(tif.pages)
-                #print(f"num pages: {len(tif.pages)}")
+                # print(f"num pages: {len(tif.pages)}")
         self.page_tracker = np.array(self.page_tracker)
         page = tif.pages[0]
 
@@ -62,7 +83,7 @@ class MultiTiffMultiPageTiffImagingExtractor(ImagingExtractor):
     def get_video(self, start_frame: int = None, end_frame: int = None, channel: Optional[int] = 0) -> np.ndarray:
         frame_idxs = np.arange(start_frame or 0, end_frame or self._num_frames)
         file_idxs = np.searchsorted(self.page_tracker, frame_idxs + 1) - 1  # index of the file that contains the frame
-        #print(f"{file_idxs=}")
+
         file_start_idxs = self.page_tracker[file_idxs]  # index of the first frame of the file
         frame_offset_idxs = frame_idxs - file_start_idxs  # index of the frame in the file
         # dict of file_idx: frame_offset_idxs
@@ -123,7 +144,14 @@ class MultiTiffMultiPageTiffImagingInterface(BaseImagingExtractorInterface):
 class KimLabROIInterface(BaseDataInterface):
     """Data interface for Kim Lab ROI segments data."""
 
-    def __init__(self, file_path: FilePathType, roi_info_file_path: FilePathType, sampling_frequency: float = 30.0, image_shape: Optional[tuple[int, int]] =None, verbose: bool = False):
+    def __init__(
+        self,
+        file_path: FilePathType,
+        roi_info_file_path: FilePathType,
+        sampling_frequency: float = 30.0,
+        image_shape: tuple[int, int] = None,
+        verbose: bool = False,
+    ):
         """Initialize the ROI interface.
         
         Parameters
@@ -141,14 +169,14 @@ class KimLabROIInterface(BaseDataInterface):
         """
         super().__init__(file_path=file_path, roi_info_file_path=roi_info_file_path, verbose=verbose)
         self.file_path = file_path
-        self.roi_info_file_path = roi_info_file_path    
+        self.roi_info_file_path = roi_info_file_path
         self.sampling_frequency = sampling_frequency
         self.image_shape = image_shape
         self.verbose = verbose
 
     def get_metadata(self) -> dict:
         """Get metadata for the ROI segments.
-        
+
         Returns
         -------
         dict
@@ -159,7 +187,7 @@ class KimLabROIInterface(BaseDataInterface):
 
     def add_to_nwbfile(self, nwbfile: NWBFile, metadata: Optional[DeepDict] = None):
         """Add the ROI segments data to the NWB file.
-        
+
         Parameters
         ----------
         nwbfile : NWBFile
@@ -171,12 +199,11 @@ class KimLabROIInterface(BaseDataInterface):
         # Create an ophys processing module if it doesn't exist
         if "ophys" not in nwbfile.processing:
             ophys_module = nwbfile.create_processing_module(
-                name="ophys",
-                description="Contains optical physiology processed data"
+                name="ophys", description="Contains optical physiology processed data"
             )
         else:
             ophys_module = nwbfile.processing["ophys"]
-        
+
         # Create device
         if "Microscope" not in nwbfile.devices:
             device = Device(name="Microscope")
@@ -186,17 +213,15 @@ class KimLabROIInterface(BaseDataInterface):
 
         # Create optical channel with minimum required fields
         optical_channel = OpticalChannel(
-            name="OpticalChannel",
-            description="optical channel",
-            emission_lambda=500.0  # TODO: Figure it out
+            name="OpticalChannel", description="optical channel", emission_lambda=500.0  # TODO: Figure it out
         )
 
         # Create imaging plane with minimum required fields
-        if "ImagingPlane" not in nwbfile.imaging_planes:
+        if "SegmentationPlane" not in nwbfile.imaging_planes:
             imaging_plane = nwbfile.create_imaging_plane(
-                name="ImagingPlane",
+                name="SegmentationPlane",
                 optical_channel=optical_channel,
-                description="imaging plane",
+                description="segmentation plane",
                 device=device,
                 excitation_lambda=600.0,  # TODO: Figure it out
                 imaging_rate=self.sampling_frequency,  # placeholder rate
@@ -204,42 +229,33 @@ class KimLabROIInterface(BaseDataInterface):
                 location="unknown",
             )
         else:
-            imaging_plane = nwbfile.imaging_planes["ImagingPlane"]
-        
-
+            imaging_plane = nwbfile.imaging_planes["SegmentationPlane"]
 
         # Create image segmentation
         img_seg = ImageSegmentation(name="ImageSegmentation")
         ophys_module.add(img_seg)
-        
+
         # Create plane segmentation
         plane_seg = PlaneSegmentation(
             name="PlaneSegmentation",
             description="Regions of interest from calcium imaging",
-            imaging_plane=imaging_plane
+            imaging_plane=imaging_plane,
         )
         img_seg.add_plane_segmentation(plane_seg)
 
-        # Load the data 
+        # Load the data
         df_f_data = read_mat(self.file_path)["df_f"]
         roi_info_data = read_mat(self.roi_info_file_path)
         x_coordinates = roi_info_data["x_cor"]
-        y_coordinates = roi_info_data["y_cor"]    
-    
+        y_coordinates = roi_info_data["y_cor"]
+
         # Add ROI entries to the plane segmentation with placeholder image masks
         num_rois = df_f_data.shape[0]  # First dimension is ROIs
-        if "TwoPhotonSeries" in nwbfile.acquisition:
-            image_shape = nwbfile.acquisition["TwoPhotonSeries"].dimension
-        else:
-            if self.image_shape is None:
-                raise ValueError("Image shape is required if a PhotonSeries is not found in acquisition")
-            
-            image_shape = self.image_shape
-        from skimage.draw import polygon
 
+        from skimage.draw import polygon
         for roi_index in range(num_rois):
             # Create a small placeholder mask for each ROI
-            image_mask = np.zeros(image_shape, dtype=bool)
+            image_mask = np.zeros(self.image_shape, dtype=bool)
             x = x_coordinates[roi_index]
             y = y_coordinates[roi_index]
 
@@ -249,25 +265,19 @@ class KimLabROIInterface(BaseDataInterface):
             plane_seg.add_roi(image_mask=image_mask)
 
         # Create ROI region reference
-        roi_table_region = plane_seg.create_roi_table_region(
-            description="all ROIs",
-            region=list(range(num_rois))
-        )
-        
-        # Add ROI fluorescence data
+        roi_table_region = plane_seg.create_roi_table_region(description="all ROIs", region=list(range(num_rois)))
 
-        
+        # Add ROI fluorescence data
         roi_response_series = RoiResponseSeries(
             name="RoIResponseSeries",
             data=df_f_data.T,
             rois=roi_table_region,
             unit="a.u.",
             rate=self.sampling_frequency,
-            description="Change in fluorescence normalized by baseline fluorescence (dF/F)"
+            description="Change in fluorescence normalized by baseline fluorescence (dF/F)",
         )
-        
-        from pynwb.ophys import DfOverF
+
         df_over_f_container = DfOverF(roi_response_series=roi_response_series)
-        
+
         # Add to the ophys processing module
         ophys_module.add(df_over_f_container)
