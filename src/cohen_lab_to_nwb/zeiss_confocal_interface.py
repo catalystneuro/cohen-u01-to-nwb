@@ -8,9 +8,12 @@ import czifile
 import warnings
 import xml.etree.ElementTree as ET
 
-from neuroconv.datainterfaces.ophys.baseimagingextractorinterface import BaseImagingExtractorInterface
+from neuroconv.basedatainterface import BaseDataInterface
 from roiextractors import ImagingExtractor
 from neuroconv.utils import FilePathType, DeepDict, PathType
+from pynwb.ophys import OpticalChannel, ImagingPlane
+from pynwb.image import GrayscaleImage
+from pynwb.base import Images
 
 
 class ZeissConfocalImagingExtractor(ImagingExtractor):
@@ -57,11 +60,43 @@ class ZeissConfocalImagingExtractor(ImagingExtractor):
             
             # Extract image dimensions from metadata
             image_info = metadata_root.find(".//Image/Information/Image")
-            self._num_channels = int(image_info.find("SizeC").text) if image_info.find("SizeC") is not None else 1
-            self._num_frames = int(image_info.find("SizeT").text) if image_info.find("SizeT") is not None else 1
-            self._num_z = int(image_info.find("SizeZ").text) if image_info.find("SizeZ") is not None else 1
-            self._num_rows = int(image_info.find("SizeY").text)
-            self._num_columns = int(image_info.find("SizeX").text)
+            
+            if image_info is None:
+                # Try alternative paths for image dimensions
+                self._num_channels = 1
+                self._num_frames = 1
+                self._num_z = 1
+                
+                # Try to get dimensions from the shape of the data array
+                shape = czi_reader.shape
+                axes = czi_reader.axes
+                
+                if 'C' in axes:
+                    self._num_channels = shape[axes.index('C')]
+                if 'T' in axes:
+                    self._num_frames = shape[axes.index('T')]
+                if 'Z' in axes:
+                    self._num_z = shape[axes.index('Z')]
+                if 'Y' in axes:
+                    self._num_rows = shape[axes.index('Y')]
+                else:
+                    raise ValueError("Could not determine Y dimension from CZI file")
+                if 'X' in axes:
+                    self._num_columns = shape[axes.index('X')]
+                else:
+                    raise ValueError("Could not determine X dimension from CZI file")
+            else:
+                # Extract dimensions from the image_info element
+                self._num_channels = int(image_info.find("SizeC").text) if image_info.find("SizeC") is not None else 1
+                self._num_frames = int(image_info.find("SizeT").text) if image_info.find("SizeT") is not None else 1
+                self._num_z = int(image_info.find("SizeZ").text) if image_info.find("SizeZ") is not None else 1
+                self._num_rows = int(image_info.find("SizeY").text)
+                self._num_columns = int(image_info.find("SizeX").text)
+            
+            # Check if there's more than one time point
+            if self._num_frames > 1:
+                raise ValueError("This interface only supports CZI files with a single time point. "
+                                 f"Found {self._num_frames} time points.")
             
             # Get channel information
             channels = metadata_root.findall(".//Dimensions/Channels/Channel")
@@ -175,32 +210,53 @@ class ZeissConfocalImagingExtractor(ImagingExtractor):
         return self._dtype
 
 
-class ZeissConfocalInterface(BaseImagingExtractorInterface):
+class ZeissConfocalInterface(BaseDataInterface):
     """
     Interface for Zeiss confocal microscopy CZI files.
+    
+    This interface inherits from BaseDataInterface and handles the extraction
+    of confocal microscopy data from Zeiss CZI files, saving the ImagingPlane
+    and images from both channels as an Images container.
     """
     display_name = "Zeiss Confocal Imaging"
-    Extractor = ZeissConfocalImagingExtractor
 
-    @classmethod
-    def get_source_schema(cls) -> dict:
-        """Get the source schema for the interface."""
-        source_schema = super().get_source_schema()
-        source_schema["properties"]["file_path"] = {
-            "type": "string",
-            "description": "Path to the Zeiss .czi file"
-        }
-        source_schema["properties"]["channel_name"] = {
-            "type": "string",
-            "description": "Name of the channel to extract (e.g., 'Alexa Fluor 488')",
-            "required": False
-        }
-        return source_schema
-
-    def __init__(self, file_path: FilePathType, channel_name: Optional[str] = None, verbose: bool = False):
-        """Initialize the interface."""
-        super().__init__(file_path=file_path, channel_name=channel_name, verbose=verbose)
-        self.channel_name = channel_name
+    def __init__(self, file_path: FilePathType, channel_names: Optional[List[str]] = None, verbose: bool = False):
+        """
+        Initialize the interface.
+        
+        Parameters
+        ----------
+        file_path : FilePathType
+            Path to the Zeiss .czi file
+        channel_names : Optional[List[str]], default: None
+            List of channel names to extract (e.g., ['Alexa Fluor 488', 'Alexa Fluor 633'])
+            If None, all available channels will be extracted
+        verbose : bool, default: False
+            If True, print verbose output
+        """
+        super().__init__(file_path=file_path, verbose=verbose)
+        self.file_path = Path(file_path)
+        self.channel_names = channel_names
+        self.extractors = {}
+        
+        # Create extractors for each channel
+        if channel_names:
+            for channel_name in channel_names:
+                self.extractors[channel_name] = ZeissConfocalImagingExtractor(
+                    file_path=file_path, 
+                    channel_name=channel_name
+                )
+        else:
+            # If no channels specified, create a single extractor without channel filtering
+            extractor = ZeissConfocalImagingExtractor(file_path=file_path)
+            # Get all available channels
+            available_channels = extractor.get_channel_names()
+            for channel_name in available_channels:
+                self.extractors[channel_name] = ZeissConfocalImagingExtractor(
+                    file_path=file_path, 
+                    channel_name=channel_name
+                )
+            self.channel_names = available_channels
 
     def get_metadata(self) -> DeepDict:
         """
@@ -214,7 +270,7 @@ class ZeissConfocalInterface(BaseImagingExtractorInterface):
         metadata = super().get_metadata()
 
         # Parse CZI metadata
-        with czifile.CziFile(self.source_data["file_path"]) as czi_reader:
+        with czifile.CziFile(self.file_path) as czi_reader:
             root = ET.fromstring(czi_reader.metadata())
 
             # Get creation date
@@ -253,48 +309,186 @@ class ZeissConfocalInterface(BaseImagingExtractorInterface):
 
             # Process channel information
             channels = root.findall(".//Dimensions/Channels/Channel")
-            optical_channels = []
+            optical_channels_metadata = []
             
             for channel in channels:
                 channel_name = channel.find("Name").text if channel.find("Name") is not None else None
-                if channel_name is None or (self.channel_name is not None and channel_name != self.channel_name):
+                if channel_name is None:
                     continue
 
                 fluor = channel.find("Fluor").text if channel.find("Fluor") is not None else None
                 excitation = float(channel.find("ExcitationWavelength").text) if channel.find("ExcitationWavelength") is not None else None
                 emission = float(channel.find("EmissionWavelength").text) if channel.find("EmissionWavelength") is not None else None
 
-                optical_channels.append({
+                optical_channels_metadata.append({
                     "name": channel_name,
                     "description": f"{fluor} channel" if fluor else f"Channel {channel_name}",
                     "emission_lambda": emission
                 })
 
             # Create imaging plane metadata
-            channel_name_formatted = self.channel_name.replace(" ", "") if self.channel_name else "Default"
-            imaging_plane_name = f"ImagingPlane{channel_name_formatted}"
-            
             imaging_plane_metadata = {
-                "name": imaging_plane_name,
-                "optical_channel": optical_channels,
+                "name": "ImagingPlane",
+                "optical_channel": optical_channels_metadata,
                 "description": "Confocal Imaging Plane",
                 "device": "ZeissMicroscope",
                 "excitation_lambda": excitation if 'excitation' in locals() else None,
-                "indicator": fluor if 'fluor' in locals() else "unknown",
+                "indicator": "multiple" if len(optical_channels_metadata) > 1 else (fluor if 'fluor' in locals() else "unknown"),
                 "location": "unknown",
                 "grid_spacing": [pixel_size_x, pixel_size_y] if 'pixel_size_x' in locals() and 'pixel_size_y' in locals() else None,
                 "grid_spacing_unit": "meters",
-                "imaging_rate": self.imaging_extractor.get_sampling_frequency()
+                "imaging_rate": None  # Confocal images typically don't have a frame rate
             }
             metadata["Ophys"]["ImagingPlane"] = [imaging_plane_metadata]
 
-            # Create two-photon series metadata
-            two_photon_series_name = f"ConfocalSeries{channel_name_formatted}"
-            two_photon_series_metadata = {
-                "name": two_photon_series_name,
-                "imaging_plane": imaging_plane_name,
-                "unit": "n.a."
-            }
-            metadata["Ophys"]["TwoPhotonSeries"] = [two_photon_series_metadata]
+            # Create images metadata for each channel
+            images_metadata = []
+            for channel_metadata in optical_channels_metadata:
+                channel_name = channel_metadata["name"]
+                if self.channel_names and channel_name not in self.channel_names:
+                    continue
+                
+                channel_name_formatted = channel_name.replace(" ", "")
+                images_metadata.append({
+                    "name": f"ConfocalImages{channel_name_formatted}",
+                    "description": f"Confocal images for {channel_name}"
+                })
+            
+            metadata["Ophys"]["Images"] = images_metadata
 
         return metadata
+        
+    def add_to_nwbfile(self, nwbfile, metadata: Optional[dict] = None):
+        """
+        Add the confocal data to an NWB file.
+        
+        Parameters
+        ----------
+        nwbfile : NWBFile
+            NWB file to add the confocal data to
+        metadata : Optional[dict], default: None
+            Metadata dictionary
+        """
+        if metadata is None:
+            metadata = self.get_metadata()
+            
+        # Get device
+        device_metadata = metadata["Ophys"]["Device"][0]
+        device = nwbfile.create_device(
+            name=device_metadata["name"],
+            description=device_metadata["description"]
+        )
+        
+        # Create at least one optical channel (required by NWB)
+        # Even if we don't have channel metadata, we need to create a default optical channel
+        optical_channels = []
+        
+        if len(metadata["Ophys"]["ImagingPlane"][0]["optical_channel"]) > 0:
+            # Use the channel metadata if available
+            for channel_metadata in metadata["Ophys"]["ImagingPlane"][0]["optical_channel"]:
+                if self.channel_names and channel_metadata["name"] not in self.channel_names:
+                    continue
+                    
+                # Ensure emission_lambda is not None (required by NWB)
+                emission_lambda = channel_metadata.get("emission_lambda")
+                if emission_lambda is None:
+                    # Use a default value if not available
+                    emission_lambda = 520.0  # Common emission wavelength for fluorescence microscopy
+                    
+                optical_channel = OpticalChannel(
+                    name=channel_metadata["name"],
+                    description=channel_metadata["description"],
+                    emission_lambda=emission_lambda
+                )
+                optical_channels.append(optical_channel)
+        
+        # If no optical channels were created, create a default one
+        if len(optical_channels) == 0:
+            optical_channel = OpticalChannel(
+                name="OpticalChannel",
+                description="Default optical channel",
+                emission_lambda=520.0
+            )
+            optical_channels.append(optical_channel)
+            
+        # Create imaging plane
+        imaging_plane_metadata = metadata["Ophys"]["ImagingPlane"][0]
+        grid_spacing = imaging_plane_metadata.get("grid_spacing")
+        grid_spacing_unit = imaging_plane_metadata.get("grid_spacing_unit")
+        
+        # Ensure excitation_lambda is not None (required by NWB)
+        excitation_lambda = np.nan
+        
+        imaging_plane = nwbfile.create_imaging_plane(
+            name=imaging_plane_metadata["name"],
+            optical_channel=optical_channels,
+            description=imaging_plane_metadata["description"],
+            device=device,
+            excitation_lambda=excitation_lambda,
+            indicator=imaging_plane_metadata.get("indicator", "unknown"),
+            location=imaging_plane_metadata.get("location", "unknown"),
+            grid_spacing=grid_spacing,
+            grid_spacing_unit=grid_spacing_unit
+        )
+        
+        # Add image data for each channel as a single Images container
+        for channel_name, extractor in self.extractors.items():
+            channel_name_formatted = channel_name.replace(" ", "")
+            images_name = f"ConfocalImages{channel_name_formatted}"
+            
+            # Get raw data directly from the extractor
+            raw_data = extractor._data
+            
+            # Get the channel index (it will always be available since we create an extractor per channel)
+            channel_index = extractor._channel_index
+            
+            # Create a list to hold all images for this channel
+            grayscale_images = []
+            
+            # For Z-stack data
+            if extractor._num_z > 1:
+                # For each Z slice
+                for z in range(extractor._num_z):
+                    # Extract the image data for this channel and Z slice
+                    # The shape of raw_data might vary, so we need to handle different cases
+                    if len(raw_data.shape) == 5:  # (T, C, Z, Y, X)
+                        image_data = raw_data[0, channel_index, z, :, :]
+                    elif len(raw_data.shape) == 4:  # (C, Z, Y, X)
+                        image_data = raw_data[channel_index, z, :, :]
+                    else:
+                        raise ValueError(f"Unexpected data shape: {raw_data.shape}")
+                    
+                    # Create a GrayscaleImage for this slice
+                    image_name = f"{images_name}_z{z}"
+                    grayscale_image = GrayscaleImage(
+                        name=image_name,
+                        data=image_data,
+                        description=f"Confocal image for {channel_name}, depth index: {z}"
+                    )
+                    grayscale_images.append(grayscale_image)
+            else:
+                # For 2D data (no Z stack)
+                if len(raw_data.shape) == 4:  # (T, C, Y, X)
+                    image_data = raw_data[0, channel_index, :, :]
+                elif len(raw_data.shape) == 3:  # (C, Y, X)
+                    image_data = raw_data[channel_index, :, :]
+                else:
+                    raise ValueError(f"Unexpected data shape: {raw_data.shape}")
+                
+                # Create a GrayscaleImage
+                grayscale_image = GrayscaleImage(
+                    name=images_name,
+                    data=image_data,
+                    description=f"Confocal image for {channel_name}"
+                )
+                grayscale_images.append(grayscale_image)
+            
+            # Create a single Images container with all the GrayscaleImage objects for this channel
+            images_container = Images(
+                name=images_name,
+                images=grayscale_images,
+                description=f"Z-stack of confocal images for {channel_name} with {len(grayscale_images)} slices"
+            )
+            
+            # Add the Images container to the NWB file
+            nwbfile.add_acquisition(images_container)
