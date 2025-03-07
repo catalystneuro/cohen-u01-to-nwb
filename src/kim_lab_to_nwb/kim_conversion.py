@@ -3,16 +3,18 @@ from pathlib import Path
 import uuid
 
 import numpy as np
-from neuroconv.tools.nwb_helpers import get_default_backend_configuration, configure_backend
-from neuroconv.datainterfaces import VideoInterface
-from pynwb import NWBFile, TimeSeries, NWBHDF5IO
+from neuroconv.tools.nwb_helpers import get_default_backend_configuration, configure_and_write_nwbfile
+from neuroconv.datainterfaces import VideoInterface, ScanImageImagingInterface
+from neuroconv import ConverterPipe
+from pynwb import NWBFile, TimeSeries
 from pynwb.file import Subject
 from pymatreader import read_mat
 from pynwb.device import Device
 
-from kim_lab_to_nwb.ophys import MultiTiffMultiPageTiffImagingInterface, KimLabROIInterface
+from kim_lab_to_nwb.ophys import KimLabROIInterface
 from kim_lab_to_nwb.stimuli import KimLabStimuliInterface
 from cohen_u01_nwb_conversion_utils.utils import detect_threshold_crossings
+from zoneinfo import ZoneInfo
 
 
 def convert_session_to_nwb(
@@ -45,12 +47,12 @@ def convert_session_to_nwb(
         Directory where the NWB file will be saved
     verbose : bool, optional
         Whether to print progress information, by default False
-    
+
     Returns
     -------
     Path
         Path to the created NWB file
-    
+
     Raises
     ------
     FileNotFoundError
@@ -81,18 +83,18 @@ def convert_session_to_nwb(
     # Load data
     mat_data = read_mat(matlab_data_file_path)
     data = mat_data["data"]
-    protocol = mat_data["protocol"]
 
+    protocol = mat_data["protocol"]
     experiment_info = read_mat(experiment_info_file_path)
     age = experiment_info["age"]
     genotype = experiment_info["cross"]
 
     # Extract session ID from matlab file path
-    session_id = matlab_data_file_path.stem.split('data_')[1]
+    session_id = matlab_data_file_path.stem.split("data_")[1]
     if verbose:
         print(f"Processing {session_id=} ({age=}, {genotype=})")
 
-    session_start_time = datetime.strptime(session_id[:8], '%Y%m%d')
+    session_start_time = datetime.strptime(session_id[:8], "%Y%m%d")
     if verbose:
         print(f"Session start time: {session_start_time}")
 
@@ -104,63 +106,77 @@ def convert_session_to_nwb(
     y_position = data[4]
     two_photon_frame_sync = data[5]
     behavior_camera_sync = data[6]
-    stimulus_start = data[7]
+    stimulus_start = data[7]  # Not used in this example, empty for the example data
 
-    # Create NWB file
-    nwbfile = NWBFile(
-        session_description=f"protocol: {protocol}",
-        identifier=str(uuid.uuid4()),
-        session_start_time=session_start_time,
-        session_id=session_id,
+    # Set up the imaging interfaces for two channels
+    tiff_file_path = tiff_folder_path / f"{session_id}_00001.tif"
+    scan_image_interface_channel_1 = ScanImageImagingInterface(
+        file_path=tiff_file_path,
+        channel_name="Channel 1",
     )
 
-    # Set up imaging interface
-    ophys_interface = MultiTiffMultiPageTiffImagingInterface(
-        tiff_folder_path,
-        pattern=session_id + "_{frame:05d}.tif",
-        sampling_frequency=30.0,
-        verbose=verbose
+    scan_image_interface_channel_2 = ScanImageImagingInterface(
+        file_path=tiff_file_path,
+        channel_name="Channel 2",
     )
 
-    aligned_timestamps = time[detect_threshold_crossings(two_photon_frame_sync, 0.5)]
-    aligned_timestamps = aligned_timestamps[:ophys_interface.imaging_extractor.get_num_frames()]
-    ophys_interface.set_aligned_timestamps(aligned_timestamps=aligned_timestamps)
-    ophys_interface.add_to_nwbfile(nwbfile, metadata=dict())
-
+    num_frames = scan_image_interface_channel_1.imaging_extractor.get_num_frames()
+    two_photon_timestamps = time[detect_threshold_crossings(two_photon_frame_sync, 0.5)]
+    two_photon_timestamps = two_photon_timestamps[:num_frames]
+    scan_image_interface_channel_1.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps)
+    scan_image_interface_channel_2.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps)
 
     # Set up ROI interface
     roi_interface = KimLabROIInterface(
         file_path=df_f_file_path,
         roi_info_file_path=roi_info_file_path,
+        image_shape=(64, 64), 
         sampling_frequency=30.0,  # Same rate as imaging data
-        verbose=verbose
+        verbose=verbose,
     )
-    roi_interface.add_to_nwbfile(nwbfile, metadata=dict())
-
 
     # Set up stimuli interface
     stimuli_interface = KimLabStimuliInterface(
         file_path=visual_stimuli_file_path,
         sampling_frequency=30.0,  # Same rate as imaging data
-        verbose=verbose
+        verbose=verbose,
     )
-    stimuli_interface.add_to_nwbfile(nwbfile, metadata=dict())
 
     # Set up video interface
-    video_interface = VideoInterface(
-        file_paths=[video_file_path],
-    )
+    video_interface = VideoInterface(file_paths=[video_file_path])
 
     video_timestamps = time[detect_threshold_crossings(behavior_camera_sync, 0.5)]
     video_interface.set_aligned_timestamps([video_timestamps])
-    video_interface.add_to_nwbfile(nwbfile, metadata=dict())
 
-    # Add subject information
-    nwbfile.subject = Subject(
-        subject_id=session_id,
-        genotype=genotype,
-        age=f"P{age}D",
+    converter_pipe = ConverterPipe(
+        data_interfaces={
+            "imaging_channel_1": scan_image_interface_channel_1,
+            "imaging_channel_2": scan_image_interface_channel_2,
+            "stimuli": stimuli_interface,
+            "video": video_interface,
+            "roi": roi_interface,
+        }
     )
+
+    california_tz = ZoneInfo("America/Los_Angeles")
+    session_start_time = session_start_time.replace(tzinfo=california_tz)
+
+    metadata = converter_pipe.get_metadata()
+    metadata["NWBFile"]["session_start_time"] = session_start_time
+    metadata["NWBFile"]["session_description"] = f"protocol: {protocol}"
+    metadata["NWBFile"]["session_id"] = session_id
+    metadata["Subject"]["species"] = "Drosophila melanogaster"
+    metadata["Subject"]["strain"] = genotype
+    metadata["Subject"]["age"] = f"P{age}D"
+    metadata["Subject"]["subject_id"] = session_id
+    metadata["Subject"]["sex"] = "F"
+    
+    conversion_options = {
+        "imaging_channel_1": dict(stub_test=False, photon_series_index=0),
+        "imaging_channel_2": dict(stub_test=False, photon_series_index=1),
+    }
+
+    nwbfile = converter_pipe.create_nwbfile(metadata=metadata, conversion_options=conversion_options,)
 
     # Add timeseries data
     timeseries_wingbeat = TimeSeries(
@@ -191,7 +207,6 @@ def convert_session_to_nwb(
     nwbfile.add_acquisition(timeseries_x_position)
 
     # Add DAQ device
-    
     ni_daq = Device(
         name="NI 782258-01",
         description=(
@@ -199,24 +214,19 @@ def convert_session_to_nwb(
             "32 single-ended or 16 differential analog inputs (16-bit resolution), "
             "4 analog outputs (±10V, 16-bit resolution), "
             "32 digital I/O, 16 bidirectional channels, "
-            "4 counter/timers, 1 MS/s sampling rate."  #TODO get a description in termso f hte experiment
+            "4 counter/timers, 1 MS/s sampling rate."  # TODO get a description in termso f hte experiment
         ),
         manufacturer="National Instruments (NI)",
     )
     nwbfile.add_device(ni_daq)
 
-
     # Configure and save the NWB file
-    backend_configuration = get_default_backend_configuration(nwbfile, backend="hdf5")
-    configure_backend(nwbfile=nwbfile, backend_configuration=backend_configuration)
-
     nwbfile_path = output_dir / f"{session_id}.nwb"
-    with NWBHDF5IO(nwbfile_path, mode="w") as io:
-        io.write(nwbfile)
-    
+    configure_and_write_nwbfile(nwbfile=nwbfile, output_filepath=nwbfile_path, backend="hdf5")
+
     if verbose:
         print(f"Created NWB file: {nwbfile_path}")
-    
+
     return nwbfile_path
 
 
@@ -234,7 +244,7 @@ if __name__ == "__main__":
     output_dir = data_folder_path / "nwb"
 
     output_dir.mkdir(exist_ok=True, parents=True)
-    
+
     nwbfile_path = convert_session_to_nwb(
         matlab_data_file_path=matlab_data_file_path,
         video_file_path=video_file_path,
@@ -244,5 +254,5 @@ if __name__ == "__main__":
         df_f_file_path=df_f_file_path,
         roi_info_file_path=roi_info_file_path,
         output_dir=output_dir,
-        verbose=True  # Enable verbose output for demonstration
+        verbose=True,  # Enable verbose output for demonstration
     )
