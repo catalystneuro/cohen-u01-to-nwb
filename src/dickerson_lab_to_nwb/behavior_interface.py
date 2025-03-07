@@ -50,19 +50,22 @@ class BehaviorInterface(BaseDataInterface):
         if metadata is None:
             metadata = self.get_metadata()
 
-
         with h5py.File(self.file_path, "r") as f:
-            
+
             # Timestamps
-            frame_counter = f["CI"]["FrameCounter"]    
+            frame_counter = f["CI"]["FrameCounter"]
             # From personal communication we know that frames are recorded at 4 Hz
-            timestamps = frame_counter[:].squeeze() / 4.0
-            
-            
-            # WinbBeat
-    
+            sampling_rate = 4.0
+            timestamps = frame_counter[:].squeeze() / sampling_rate  # (frames / (frames / seconds))
+
+            # WingBeat
+
             left_wing_beat_amplitude = f["AI"]["LeftWingBeatAmplitude"][:].squeeze()
-            left_minus_right_wing_beat = f["AI"]["LeftMinusRightWingBeatAmpltude"][:].squeeze()
+            # Some data has a typo that looks like the first
+            valid_names = ["LeftMinusRightWingBeatAmpltude", "LeftMinusRightWingBeatAmplitude"]
+            for name in valid_names:
+                if name in f["AI"]:
+                    left_minus_right_wing_beat = f["AI"][name][:].squeeze()
 
             left_wing_beat_amplitude_ts = TimeSeries(
                 name="LeftWingBeatAmplitudeTimeSeries",
@@ -87,24 +90,24 @@ class BehaviorInterface(BaseDataInterface):
             visual_stimulus_y = f["AI"]["VisualStimulus2"]
 
             from pynwb.behavior import SpatialSeries
-            
+
             description = (
                 "Analog output from the controller of the visual arena feeding "
                 "information about the pattern/bar movement in the X and Y direction "
-                "to Thorsync using the same breakout box."
+                "to Thorsync using the same breakout box. "
+                "The stimuli is 6-pixel wide light bar on a dark background"
             )
-            
+
             visual_stimuli_stack = np.stack((visual_stimulus_x[:], visual_stimulus_y[:]), axis=1).squeeze()
-            
+
             spatial_series = SpatialSeries(
                 name="VisualStimulusSpatialSeries",
                 data=visual_stimuli_stack,
-                unit="volt", 
-                reference_frame="unknown", # TODO: figure out what this should be
+                unit="volt",
+                reference_frame="unknown",  # TODO: figure out what this should be
                 description=description,
                 timestamps=timestamps,
             )
 
-            
             # add as stimulus
             nwbfile.add_stimulus(spatial_series)
