@@ -30,8 +30,7 @@ They will send it
 * Why is the unit milliwatt per square millimeters?
 This is more useful. See discussion here:
 https://github.com/NeurodataWithoutBorders/nwb-schema/issues/609
-* Can we get a table instead of a plot?
-They will send it over
+
 * Is the stimuli constant in the other experiments?
 Yes. Within an experiment it is constant.
 * Are you gona have imaging series data on other experiments?
@@ -87,7 +86,7 @@ The columns of the matlab struct are:
 * **bodyRoll**: body roll angles
 * **bodyYaw**: body yaw angles
 * **optoStimRange**: 2 element array containing the start and end times of the optogenetic stimulation.
-
+* **frameNum** The frame number is essentially the time multiplied by the frame rate. I think this is the time 
 
 The title of each .mat file contains information about the type of perturbation in the following format:
 driver_stimulusType_intensity_duration
@@ -108,6 +107,19 @@ This is for the file `'SS40851_Activation_1A_50ms.mat'`:
 The LED intensities are controlled by changing the amount of current that is driving the LED. The maximum current is set at 1A. The red LED for activation experiments (wavelength of 625nm) current to intensity curve is plotted in LED_calibration_curve.png.
 
 ![LED Calibration Curve](assets/LED_calibration_curve.png)
+
+The table of the intensities is here:
+
+```
+| Current | Intensity |
+|---------|-----------|
+| 1/6     | 0.007     |
+| 2/6     | 0.018     |
+| 3/6     | 0.035     |
+| 4/6     | 0.084     |
+| 5/6     | 0.197     |
+| 6/6     | 0.232     |
+```
 
 #### Questions
 

@@ -16,6 +16,37 @@ import zoneinfo
 from neuroconv.tools.nwb_helpers import configure_and_write_nwbfile
 
 
+def current_to_intensity_map(current: float) -> float:
+    """
+    Returns the intensity (watts/mm^2) closest to the given current.
+    This function is used to convert the current values from the
+    optogenetic stimulation data to the corresponding intensity values.
+    
+    The mapping was provided by the Cohen lab and can be expanded as needed.
+
+    Parameters
+    ----------
+    current : float
+        The input current as a float.
+
+    Returns
+    -------
+    float
+        The intensity corresponding to the nearest current value.
+    """
+    current_to_intensity = {
+        1.0/6.0: 0.007,
+        2.0/6.0: 0.018,
+        3.0/6.0: 0.035,
+        4.0/6.0: 0.084,
+        5.0/6.0: 0.197,
+        6.0/6.0: 0.232,
+    }
+
+    closest_current = min(current_to_intensity.keys(), key=lambda k: abs(k - current))
+    return current_to_intensity[closest_current]
+
+
 def convert_stimuli_experiment_to_nwb(
     matlab_struct_file_path: str | Path,
     video_folder_path: str | Path,
@@ -201,7 +232,8 @@ def convert_stimuli_experiment_to_nwb(
 
         nwbfile.add_ogen_site(ogen_stimuli_site)
 
-        data = [experiment_opto_intensity_in_ampers] * len(experiment_timestamp)
+        intensity_per_mm_squared = current_to_intensity_map(experiment_opto_intensity_in_ampers)
+        data = [intensity_per_mm_squared] * len(experiment_timestamp)
         starting_time = experiment_opto_stim_range[0]
         optogenetic_series = OptogeneticSeries(
             name="OptogeneticSeries",
