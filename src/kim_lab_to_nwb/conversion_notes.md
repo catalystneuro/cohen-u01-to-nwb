@@ -12,6 +12,8 @@
 * data(7,:) is behavior camera signal (1 pulse corresponds to 1 frame)
 * data(8,:) indicates the start of a stimulus (it is empty in this example)
 
+The data shape is 495, 000 samples
+
 # Questions for the meeting on 2024-11-06
 * How is the data in the matlab aquired? which DAQ?
 The DAQ is the following:
@@ -64,6 +66,29 @@ x_cor: shape =(17, 3)
 y_cor: shape=(17, 3)
 ```
 
+The fluoresence traces accessed like this:
+
+```python
+from pathlib import Path
+
+folder_path = Path("/home/heberto/cohen_project/Sample data/Kim Lab")
+analysis_data_folder = folder_path / "analysis"
+assert analysis_data_folder.is_dir()
+
+df_f_mat_file_path = analysis_data_folder / "df_f.mat"
+assert df_f_mat_file_path.exists()
+
+from pymatreader import read_mat
+
+delta_f = read_mat(df_f_mat_file_path)["df_f"]
+    
+print(delta_f.shape)
+(17, 495,000)
+
+```
+
+Where the first number is the number of rois and the second is the number of samples.
+
 What are the three things, vertices? So the ROIs are triangles.
 
 
@@ -71,4 +96,10 @@ What are the three things, vertices? So the ROIs are triangles.
 This is scan image data with a self-made microscope. The specification of the tiff file metadata can be found here:
 
 https://docs.scanimage.org/Appendix/ScanImage%2BBigTiff%2BSpecification.html#scanimage-bigtiff-specification
+
+
+## The Stimuli
+(16, 80, 495,000) as many samples as the matlab file. 16 by 80 is the size of the displayed image as depicted on the image below:
+
+![Stimuli Example](./assets/stimuli_example.jpg)
 

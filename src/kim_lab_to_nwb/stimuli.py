@@ -11,26 +11,32 @@ from pymatreader import read_mat
 class KimLabStimuliInterface(BaseDataInterface):
     """Data interface for Kim Lab visual stimuli data."""
 
-    def __init__(self, file_path: FilePathType, sampling_frequency: float = 30.0, verbose: bool = False):
+    def __init__(
+        self,
+        file_path: FilePathType,
+        timestamps: np.ndarray,
+        verbose: bool = False,
+    ):
         """Initialize the stimuli interface.
-        
+
         Parameters
         ----------
         file_path : FilePathType
             Path to the visual_stimuli.mat file
-        sampling_frequency : float
-            Sampling frequency in Hz
+        timestamps : np.ndarray
+            Timestamps for the visual stimuli. This is usedd to synchronize the
+            visual stimuli with the rest of the data.
         verbose : bool, default: False
             Whether to print progress information
         """
         super().__init__(file_path=file_path)
         self.file_path = file_path
-        self.sampling_frequency = sampling_frequency
+        self.timestamps = timestamps
         self.verbose = verbose
 
     def get_metadata(self) -> dict:
         """Get metadata for the visual stimuli.
-        
+
         Returns
         -------
         dict
@@ -41,7 +47,7 @@ class KimLabStimuliInterface(BaseDataInterface):
 
     def add_to_nwbfile(self, nwbfile: NWBFile, metadata: Optional[DeepDict] = None):
         """Add the visual stimuli data to the NWB file.
-        
+
         Parameters
         ----------
         nwbfile : NWBFile
@@ -51,18 +57,19 @@ class KimLabStimuliInterface(BaseDataInterface):
         """
         # Load the visual stimuli data
         data = read_mat(self.file_path)["visual_stimuli"]
-        
+
         # Create an image series for the visual stimuli
         # The data shape is (16, 80, 495000) where:
         # - First two dimensions (16, 80) are the stimulus image at each timepoint
         # - Last dimension (495000) is time
+        data = np.moveaxis(data, 2, 0)
         image_series = ImageSeries(
             name="VisualStimuli",
-            data=np.moveaxis(data, -1, 0),  # Move time dimension to first axis (495000, 16, 80)
+            data=data,
             unit="n.a.",
-            rate=self.sampling_frequency,
-            description="Visual stimuli presented during the experiment"
+            timestamps=self.timestamps,
+            description="Visual stimuli presented during the experiment",
         )
-        
+
         # Add to the NWB file's stimulus presentation
         nwbfile.add_stimulus(image_series)

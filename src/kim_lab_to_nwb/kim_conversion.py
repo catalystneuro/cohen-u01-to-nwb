@@ -84,6 +84,8 @@ def convert_session_to_nwb(
     mat_data = read_mat(matlab_data_file_path)
     data = mat_data["data"]
 
+
+
     protocol = mat_data["protocol"]
     experiment_info = read_mat(experiment_info_file_path)
     age = experiment_info["age"]
@@ -108,8 +110,8 @@ def convert_session_to_nwb(
     behavior_camera_sync = data[6]
     stimulus_start = data[7]  # Not used in this example, empty for the example data
 
-    # Set up the imaging interfaces for two channels
     tiff_file_path = tiff_folder_path / f"{session_id}_00001.tif"
+    # Set up the imaging interfaces for two channels
     scan_image_interface_channel_1 = ScanImageImagingInterface(
         file_path=tiff_file_path,
         channel_name="Channel 1",
@@ -122,23 +124,22 @@ def convert_session_to_nwb(
 
     num_frames = scan_image_interface_channel_1.imaging_extractor.get_num_frames()
     two_photon_timestamps = time[detect_threshold_crossings(two_photon_frame_sync, 0.5)]
-    two_photon_timestamps = two_photon_timestamps[:num_frames]
-    scan_image_interface_channel_1.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps)
-    scan_image_interface_channel_2.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps)
+    scan_image_interface_channel_1.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[:num_frames])
+    scan_image_interface_channel_2.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[:num_frames])
 
     # Set up ROI interface
     roi_interface = KimLabROIInterface(
         file_path=df_f_file_path,
         roi_info_file_path=roi_info_file_path,
-        image_shape=(64, 64), 
-        sampling_frequency=30.0,  # Same rate as imaging data
+        image_shape=(64, 64),
+        timestamps=time,
         verbose=verbose,
     )
 
     # Set up stimuli interface
     stimuli_interface = KimLabStimuliInterface(
         file_path=visual_stimuli_file_path,
-        sampling_frequency=30.0,  # Same rate as imaging data
+        timestamps=time,
         verbose=verbose,
     )
 
@@ -170,13 +171,16 @@ def convert_session_to_nwb(
     metadata["Subject"]["age"] = f"P{age}D"
     metadata["Subject"]["subject_id"] = session_id
     metadata["Subject"]["sex"] = "F"
-    
+
     conversion_options = {
         "imaging_channel_1": dict(stub_test=False, photon_series_index=0),
         "imaging_channel_2": dict(stub_test=False, photon_series_index=1),
     }
 
-    nwbfile = converter_pipe.create_nwbfile(metadata=metadata, conversion_options=conversion_options,)
+    nwbfile = converter_pipe.create_nwbfile(
+        metadata=metadata,
+        conversion_options=conversion_options,
+    )
 
     # Add timeseries data
     timeseries_wingbeat = TimeSeries(
@@ -188,11 +192,13 @@ def convert_session_to_nwb(
     )
     nwbfile.add_acquisition(timeseries_wingbeat)
 
+    # Note that this pattern indicates that the timestamps are the same as wingbeat
+    common_timestamps = timeseries_wingbeat
     timeseries_left_right_wingbeat = TimeSeries(
         name="left_right_wingbeat",
         data=left_right_wingbeat,
         unit="n.a.",
-        timestamps=timeseries_wingbeat,
+        timestamps=common_timestamps,
         description="left-right wingbeat",
     )
     nwbfile.add_acquisition(timeseries_left_right_wingbeat)
@@ -201,7 +207,7 @@ def convert_session_to_nwb(
         name="stimulus_position",
         data=np.c_[x_position, y_position],
         unit="n.a.",
-        timestamps=timeseries_wingbeat,
+        timestamps=common_timestamps,
         description="position of the visual pattern",
     )
     nwbfile.add_acquisition(timeseries_x_position)
@@ -214,7 +220,7 @@ def convert_session_to_nwb(
             "32 single-ended or 16 differential analog inputs (16-bit resolution), "
             "4 analog outputs (±10V, 16-bit resolution), "
             "32 digital I/O, 16 bidirectional channels, "
-            "4 counter/timers, 1 MS/s sampling rate."  # TODO get a description in termso f hte experiment
+            "4 counter/timers, 1 MS/s sampling rate."
         ),
         manufacturer="National Instruments (NI)",
     )
