@@ -148,7 +148,7 @@ class KimLabROIInterface(BaseDataInterface):
         self,
         file_path: FilePathType,
         roi_info_file_path: FilePathType,
-        sampling_frequency: float = 30.0,
+        timestamps: np.ndarray,
         image_shape: tuple[int, int] = None,
         verbose: bool = False,
     ):
@@ -160,8 +160,8 @@ class KimLabROIInterface(BaseDataInterface):
             Path to the df_f.mat file containing ROI segments data.
         roi_info_file_path : FilePathType
             Path to the ROI_info.mat file containing ROI information.
-        sampling_frequency : float
-            Sampling frequency in Hz
+        timestamps : np.ndarray
+            Array of timestamps in seconds. Those are used to synch to other data streams.                
         image_shape : Optional[tuple[int, int]]\
             Shape of the image, can be provided if a PhotonSeries is not found in acquisition
         verbose : bool, default: False
@@ -170,7 +170,7 @@ class KimLabROIInterface(BaseDataInterface):
         super().__init__(file_path=file_path, roi_info_file_path=roi_info_file_path, verbose=verbose)
         self.file_path = file_path
         self.roi_info_file_path = roi_info_file_path
-        self.sampling_frequency = sampling_frequency
+        self.timestamps = timestamps
         self.image_shape = image_shape
         self.verbose = verbose
 
@@ -224,7 +224,6 @@ class KimLabROIInterface(BaseDataInterface):
                 description="segmentation plane",
                 device=device,
                 excitation_lambda=600.0,  # TODO: Figure it out
-                imaging_rate=self.sampling_frequency,  # placeholder rate
                 indicator="unknown",
                 location="unknown",
             )
@@ -266,14 +265,14 @@ class KimLabROIInterface(BaseDataInterface):
 
         # Create ROI region reference
         roi_table_region = plane_seg.create_roi_table_region(description="all ROIs", region=list(range(num_rois)))
-
+        data = df_f_data.T
         # Add ROI fluorescence data
         roi_response_series = RoiResponseSeries(
             name="RoIResponseSeries",
-            data=df_f_data.T,
+            data=data,
             rois=roi_table_region,
             unit="a.u.",
-            rate=self.sampling_frequency,
+            timestamps=self.timestamps,
             description="Change in fluorescence normalized by baseline fluorescence (dF/F)",
         )
 
