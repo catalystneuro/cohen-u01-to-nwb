@@ -1,9 +1,9 @@
 from datetime import datetime
 from pathlib import Path
-import uuid
 
 import numpy as np
 from neuroconv.tools.nwb_helpers import get_default_backend_configuration, configure_and_write_nwbfile
+from neuroconv.utils import load_dict_from_file
 from neuroconv.datainterfaces import VideoInterface, ScanImageImagingInterface
 from neuroconv import ConverterPipe
 from pynwb import NWBFile, TimeSeries
@@ -14,6 +14,7 @@ from pynwb.device import Device
 from kim_lab_to_nwb.ophys import KimLabROIInterface
 from kim_lab_to_nwb.stimuli import KimLabStimuliInterface
 from kim_lab_to_nwb.trials import KimLabTrialsInterface
+from kim_lab_to_nwb.behavior import BehaviorInterface
 from cohen_u01_nwb_conversion_utils.utils import detect_threshold_crossings
 from zoneinfo import ZoneInfo
 
@@ -116,33 +117,12 @@ def convert_session_to_nwb(
     trial_data_file_path = Path(trial_data_file_path) if trial_data_file_path is not None else None
     condition_data_file_path = Path(condition_data_file_path) if condition_data_file_path is not None else None
 
-    # Validate required input files exist
-    if not matlab_data_file_path.is_file():
-        raise FileNotFoundError(f"Matlab data file not found at {matlab_data_file_path}")
+    # File validation is handled by the respective interfaces
+    # Validate experiment info file exists (not handled by any interface)
     if not experiment_info_file_path.is_file():
         raise FileNotFoundError(f"Experiment info file not found at {experiment_info_file_path}")
-    
-    # Validate optional input files exist if provided
-    if video_file_path is not None and not video_file_path.is_file():
-        raise FileNotFoundError(f"Video file not found at {video_file_path}")
-    if tiff_folder_path is not None and not tiff_folder_path.exists():
-        raise FileNotFoundError(f"Tiff folder not found at {tiff_folder_path}")
-    if df_f_file_path is not None and not df_f_file_path.is_file():
-        raise FileNotFoundError(f"df_f.mat file not found at {df_f_file_path}")
-    if roi_info_file_path is not None and not roi_info_file_path.is_file():
-        raise FileNotFoundError(f"ROI_info.mat file not found at {roi_info_file_path}")
-    if visual_stimuli_file_path is not None and not visual_stimuli_file_path.is_file():
-        raise FileNotFoundError(f"visual_stimuli.mat file not found at {visual_stimuli_file_path}")
-    if trial_data_file_path is not None and not trial_data_file_path.is_file():
-        raise FileNotFoundError(f"trial_data.mat file not found at {trial_data_file_path}")
-    if condition_data_file_path is not None and not condition_data_file_path.is_file():
-        raise FileNotFoundError(f"condition_data.mat file not found at {condition_data_file_path}")
 
-    # Load data
-    mat_data = read_mat(matlab_data_file_path)
-    nidq_device_data = mat_data["data"]
-    
-    protocol = mat_data["protocol"]
+    # Load experiment info
     experiment_info = read_mat(experiment_info_file_path)
     age = experiment_info["age"]
     genotype = experiment_info["cross"]
@@ -156,18 +136,16 @@ def convert_session_to_nwb(
     if verbose:
         print(f"Session start time: {session_start_time}")
 
-    # Unpack data
-    time = nidq_device_data[0]
-    left_wingbeat = nidq_device_data[1]
-    left_right_wingbeat = nidq_device_data[2]
-    x_position = nidq_device_data[3]
-    y_position = nidq_device_data[4]
-    two_photon_frame_sync = nidq_device_data[5]
-    behavior_camera_sync = nidq_device_data[6]
-    stimulus_start = nidq_device_data[7]  # Not used in this example, empty for the example data
-
+    # Initialize behavior interface
+    behavior_interface = BehaviorInterface(
+        file_path=matlab_data_file_path,
+        verbose=verbose,
+    )
+    
     # Initialize data interfaces dictionary
-    data_interfaces = {}
+    data_interfaces = {
+        "behavior": behavior_interface
+    }
     
     # Set up imaging interfaces if tiff folder is provided
     if tiff_folder_path is not None:
@@ -184,7 +162,7 @@ def convert_session_to_nwb(
         # )
 
         num_frames = scan_image_interface_channel_1.imaging_extractor.get_num_frames()
-        two_photon_timestamps = time[detect_threshold_crossings(two_photon_frame_sync, 0.5)]
+        two_photon_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.two_photon_frame_sync, 0.5)]
         scan_image_interface_channel_1.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[:num_frames])
 #        scan_image_interface_channel_2.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[:num_frames])
         
@@ -197,7 +175,7 @@ def convert_session_to_nwb(
             file_path=df_f_file_path,
             roi_info_file_path=roi_info_file_path,
             image_shape=(64, 64),
-            timestamps=time,
+            timestamps=behavior_interface.timestamps,
             verbose=verbose,
         )
         data_interfaces["roi"] = roi_interface
@@ -206,7 +184,7 @@ def convert_session_to_nwb(
     if visual_stimuli_file_path is not None:
         stimuli_interface = KimLabStimuliInterface(
             file_path=visual_stimuli_file_path,
-            timestamps=time,
+            timestamps=behavior_interface.timestamps,
             verbose=verbose,
         )
         data_interfaces["stimuli"] = stimuli_interface
@@ -217,7 +195,7 @@ def convert_session_to_nwb(
             trial_data_file_path=trial_data_file_path,
             condition_data_file_path=condition_data_file_path,
             stimuli_blocks=10.0,
-            timestamps=time,
+            timestamps=behavior_interface.timestamps,
             verbose=verbose,
         )
         data_interfaces["trials"] = trials_interface
@@ -225,7 +203,7 @@ def convert_session_to_nwb(
     # Set up video interface if video_file_path is provided
     if video_file_path is not None:
         video_interface = VideoInterface(file_paths=[video_file_path])
-        video_timestamps = time[detect_threshold_crossings(behavior_camera_sync, 0.5)]
+        video_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.behavior_camera_sync, 0.5)]
         video_interface.set_aligned_timestamps([video_timestamps])
         data_interfaces["video"] = video_interface
 
@@ -234,15 +212,18 @@ def convert_session_to_nwb(
     california_tz = ZoneInfo("America/Los_Angeles")
     session_start_time = session_start_time.replace(tzinfo=california_tz)
 
-    metadata = converter_pipe.get_metadata()
+    # Load metadata from YAML file
+    metadata_path = Path(__file__).parent / "metadata.yaml"
+    metadata = load_dict_from_file(metadata_path)
+    
+    # Update metadata with session-specific information
+    metadata.update(converter_pipe.get_metadata())
     metadata["NWBFile"]["session_start_time"] = session_start_time
-    metadata["NWBFile"]["session_description"] = f"protocol: {protocol}"
+    metadata["NWBFile"]["session_description"] = f"{metadata['NWBFile']['session_description']} protocol: {behavior_interface.protocol}"
     metadata["NWBFile"]["session_id"] = session_id
-    metadata["Subject"]["species"] = "Drosophila melanogaster"
     metadata["Subject"]["strain"] = genotype
     metadata["Subject"]["age"] = f"P{age}D"
     metadata["Subject"]["subject_id"] = session_id
-    metadata["Subject"]["sex"] = "F"
 
     # Set conversion options for interfaces that are present
     conversion_options = {}
@@ -251,58 +232,14 @@ def convert_session_to_nwb(
     if "imaging_channel_2" in data_interfaces:
         conversion_options["imaging_channel_2"] = dict(stub_test=False, photon_series_index=1)
 
-    nwbfile = converter_pipe.create_nwbfile(
+    # Run the conversion
+    nwbfile_path = output_dir / f"{session_id}.nwb"
+    converter_pipe.run_conversion(
+        nwbfile_path=nwbfile_path,
         metadata=metadata,
         conversion_options=conversion_options,
+        overwrite=True,
     )
-
-    # Add timeseries data
-    timeseries_wingbeat = TimeSeries(
-        name="wingbeat",
-        data=left_wingbeat,
-        unit="n.a.",
-        timestamps=time,
-        description="wingbeat",
-    )
-    nwbfile.add_acquisition(timeseries_wingbeat)
-
-    # Note that this pattern indicates that the timestamps are the same as wingbeat
-    common_timestamps = timeseries_wingbeat
-    timeseries_left_right_wingbeat = TimeSeries(
-        name="left_right_wingbeat",
-        data=left_right_wingbeat,
-        unit="n.a.",
-        timestamps=common_timestamps,
-        description="left-right wingbeat",
-    )
-    nwbfile.add_acquisition(timeseries_left_right_wingbeat)
-
-    timeseries_x_position = TimeSeries(
-        name="stimulus_position",
-        data=np.c_[x_position, y_position],
-        unit="n.a.",
-        timestamps=common_timestamps,
-        description="position of the visual pattern",
-    )
-    nwbfile.add_acquisition(timeseries_x_position)
-
-    # Add DAQ device
-    ni_daq = Device(
-        name="NI 782258-01",
-        description=(
-            "Multifunction DAQ device with USB 2.0 connectivity. "
-            "32 single-ended or 16 differential analog inputs (16-bit resolution), "
-            "4 analog outputs (±10V, 16-bit resolution), "
-            "32 digital I/O, 16 bidirectional channels, "
-            "4 counter/timers, 1 MS/s sampling rate."
-        ),
-        manufacturer="National Instruments (NI)",
-    )
-    nwbfile.add_device(ni_daq)
-
-    # Configure and save the NWB file
-    nwbfile_path = output_dir / f"{session_id}.nwb"
-    configure_and_write_nwbfile(nwbfile=nwbfile, output_filepath=nwbfile_path, backend="hdf5")
 
     if verbose:
         print(f"Created NWB file: {nwbfile_path}")
