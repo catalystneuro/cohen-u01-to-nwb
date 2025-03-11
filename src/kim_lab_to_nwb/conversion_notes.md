@@ -103,3 +103,34 @@ https://docs.scanimage.org/Appendix/ScanImage%2BBigTiff%2BSpecification.html#sca
 
 ![Stimuli Example](./assets/stimuli_example.jpg)
 
+
+## Trial and Condition
+
+For every timestamps -> (trial, condition)
+
+Within trial the condition remains the same
+
+trial0   condition
+trial0   condition
+trial0   condition
+
+
+a couple of seconds
+
+trial x
+trial x
+trial x
+
+Conditions are which pattern is being shown the the fly.
+
+The presentation is organized in blocks and the trial is 0 in between.
+Within the trials, the images are shuffled.
+
+The time in between are sessions and I will write them as epochs.
+
+
+Do you have a description of patterns
+[1, 0, 2 , ...], [9, 7, ...]
+
+what is each pattern? is this an image array?
+They are the ones from visual stimuli.
