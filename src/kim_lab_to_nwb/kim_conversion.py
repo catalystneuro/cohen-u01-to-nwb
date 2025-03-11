@@ -37,25 +37,45 @@ def convert_session_to_nwb(
     Parameters
     ----------
     matlab_data_file_path : str or Path
-        Path to the MATLAB data file
+        Path to the MATLAB data file containing the following data:
+        - data[0,:] : time (timestamps for all measurements)
+        - data[1,:] : left wingbeat amplitude
+        - data[2,:] : left-right wingbeat (difference between left and right wingbeat)
+        - data[3,:] : x-position of the visual pattern
+        - data[4,:] : y-position of the visual pattern
+        - data[5,:] : 2-photon frame synchronization signal (1 pulse corresponds to 1 frame)
+        - data[6,:] : behavior camera signal (1 pulse corresponds to 1 frame)
+        - data[7,:] : stimulus start indicator (may be empty in some examples)
     experiment_info_file_path : str or Path
-        Path to the experiment info file
+        Path to the experiment info file containing metadata such as:
+        - age: age of the fly
+        - cross: genotype/strain information
     output_dir : str or Path
         Directory where the NWB file will be saved
     video_file_path : str or Path, optional
-        Path to the video file
+        Path to the video file recording fly behavior
     tiff_folder_path : str or Path, optional
-        Path to the folder containing TIFF files
+        Path to the folder containing TIFF files from ScanImage acquisition.
+        These are two-photon microscopy images from a self-made microscope.
     df_f_file_path : str or Path, optional
-        Path to the df_f.mat file
+        Path to the df_f.mat file containing fluorescence traces (ΔF/F) for each ROI.
+        Shape is typically (num_rois, num_timepoints).
     roi_info_file_path : str or Path, optional
-        Path to the ROI_info.mat file
+        Path to the ROI_info.mat file containing ROI coordinates and reference images.
+        Contains fields:
+        - x_cor: x-coordinates of ROI vertices
+        - y_cor: y-coordinates of ROI vertices
+        - reference_image: reference image for ROIs
+        - total_ROI: total number of ROIs
     visual_stimuli_file_path : str or Path, optional
-        Path to the visual_stimuli.mat file
+        Path to the visual_stimuli.mat file containing visual stimuli presented to the fly.
+        Shape is typically (16, 80, num_timepoints) where 16x80 is the size of the displayed image.
     trial_data_file_path : str or Path, optional
-        Path to the trial_data.mat file
+        Path to the trial.mat file containing trial information.
+        Used to detect trial starts and stops based on value transitions.
     condition_data_file_path : str or Path, optional
-        Path to the condition_data.mat file
+        Path to the condition.mat file containing condition information for each trial.
+        Conditions represent which pattern is being shown to the fly.
     verbose : bool, optional
         Whether to print progress information, by default False
 
@@ -68,6 +88,19 @@ def convert_session_to_nwb(
     ------
     FileNotFoundError
         If any of the required input files are not found
+
+    Notes
+    -----
+    The conversion process creates an NWB file with the following components:
+    - Subject metadata (species, strain, age, sex)
+    - Acquisition data (wingbeat, left-right wingbeat, stimulus position)
+    - Imaging data (two-photon microscopy images)
+    - ROI data (regions of interest in the imaging data)
+    - Visual stimuli data (patterns presented to the fly)
+    - Trial data (trial start/stop times and conditions)
+    - Video data (behavior camera recordings)
+
+    Optional components are only included if the corresponding files are provided.
     """
     # Convert all paths to Path objects
     matlab_data_file_path = Path(matlab_data_file_path)
@@ -75,20 +108,13 @@ def convert_session_to_nwb(
     output_dir = Path(output_dir)
     
     # Convert optional paths to Path objects if provided
-    if video_file_path is not None:
-        video_file_path = Path(video_file_path)
-    if tiff_folder_path is not None:
-        tiff_folder_path = Path(tiff_folder_path)
-    if df_f_file_path is not None:
-        df_f_file_path = Path(df_f_file_path)
-    if roi_info_file_path is not None:
-        roi_info_file_path = Path(roi_info_file_path)
-    if visual_stimuli_file_path is not None:
-        visual_stimuli_file_path = Path(visual_stimuli_file_path)
-    if trial_data_file_path is not None:
-        trial_data_file_path = Path(trial_data_file_path)
-    if condition_data_file_path is not None:
-        condition_data_file_path = Path(condition_data_file_path)
+    video_file_path = Path(video_file_path) if video_file_path is not None else None
+    tiff_folder_path = Path(tiff_folder_path) if tiff_folder_path is not None else None
+    df_f_file_path = Path(df_f_file_path) if df_f_file_path is not None else None
+    roi_info_file_path = Path(roi_info_file_path) if roi_info_file_path is not None else None
+    visual_stimuli_file_path = Path(visual_stimuli_file_path) if visual_stimuli_file_path is not None else None
+    trial_data_file_path = Path(trial_data_file_path) if trial_data_file_path is not None else None
+    condition_data_file_path = Path(condition_data_file_path) if condition_data_file_path is not None else None
 
     # Validate required input files exist
     if not matlab_data_file_path.is_file():
@@ -114,10 +140,8 @@ def convert_session_to_nwb(
 
     # Load data
     mat_data = read_mat(matlab_data_file_path)
-    data = mat_data["data"]
-
-
-
+    nidq_device_data = mat_data["data"]
+    
     protocol = mat_data["protocol"]
     experiment_info = read_mat(experiment_info_file_path)
     age = experiment_info["age"]
@@ -133,14 +157,14 @@ def convert_session_to_nwb(
         print(f"Session start time: {session_start_time}")
 
     # Unpack data
-    time = data[0]
-    left_wingbeat = data[1]
-    left_right_wingbeat = data[2]
-    x_position = data[3]
-    y_position = data[4]
-    two_photon_frame_sync = data[5]
-    behavior_camera_sync = data[6]
-    stimulus_start = data[7]  # Not used in this example, empty for the example data
+    time = nidq_device_data[0]
+    left_wingbeat = nidq_device_data[1]
+    left_right_wingbeat = nidq_device_data[2]
+    x_position = nidq_device_data[3]
+    y_position = nidq_device_data[4]
+    two_photon_frame_sync = nidq_device_data[5]
+    behavior_camera_sync = nidq_device_data[6]
+    stimulus_start = nidq_device_data[7]  # Not used in this example, empty for the example data
 
     # Initialize data interfaces dictionary
     data_interfaces = {}
@@ -289,26 +313,42 @@ def convert_session_to_nwb(
 if __name__ == "__main__":
     # Example usage with the actual paths
     data_folder_path = Path("/home/heberto/cohen_project/Sample data/Kim Lab/20250301b")
-    # Define input paths
+    
+    # Define required input paths
     matlab_data_file_path = data_folder_path / "data_20250301b_00007.mat"
-    video_file_path = data_folder_path / "20250301b_00007.avi"
     experiment_info_file_path = data_folder_path / "exp_info.mat"
-    tiff_folder_path = data_folder_path  # Contains tiff files like 20250301b_00007_00001.tif
-    visual_stimuli_file_path = data_folder_path / "visual_stimuli.mat"
-    trial_data_file_path = data_folder_path / "trial.mat"
-    condition_data_file_path = data_folder_path / "condition.mat"
+    # Modify this to your desired output directory
     output_dir = Path("/home/heberto/cohen_project/Sample data/Kim Lab/nwb")
+    
+    # Define optional input paths (set to None if not available)
+    video_file_path = data_folder_path / "20250301b_00007.avi"  # Behavior video recording
+    tiff_folder_path = data_folder_path  # Contains tiff files like 20250301b_00007_00001.tif
+    visual_stimuli_file_path = data_folder_path / "visual_stimuli.mat"  # Visual stimuli presented to the fly
+    trial_data_file_path = data_folder_path / "trial.mat"  # Trial information
+    condition_data_file_path = data_folder_path / "condition.mat"  # Condition information for each trial
+    
+    # These files are not available for this dataset
+    df_f_file_path = None  # No fluorescence traces available
+    roi_info_file_path = None  # No ROI information available
 
     output_dir.mkdir(exist_ok=True, parents=True)
 
     nwbfile_path = convert_session_to_nwb(
+        # Required parameters
         matlab_data_file_path=matlab_data_file_path,
         experiment_info_file_path=experiment_info_file_path,
+        output_dir=output_dir,
+        
+        # Optional parameters (available for this dataset)
         video_file_path=video_file_path,
         tiff_folder_path=tiff_folder_path,
         visual_stimuli_file_path=visual_stimuli_file_path,
         trial_data_file_path=trial_data_file_path,
         condition_data_file_path=condition_data_file_path,
-        output_dir=output_dir,
+        
+        # Optional parameters (not available for this dataset)
+        df_f_file_path=df_f_file_path,  # No fluorescence traces available
+        roi_info_file_path=roi_info_file_path,  # No ROI information available
+        
         verbose=True,  # Enable verbose output for demonstration
     )
