@@ -1,4 +1,5 @@
 from typing import Optional, Tuple
+from pathlib import Path
 
 import numpy as np
 from neuroconv.basedatainterface import BaseDataInterface
@@ -168,8 +169,14 @@ class KimLabROIInterface(BaseDataInterface):
             Whether to print progress information
         """
         super().__init__(file_path=file_path, roi_info_file_path=roi_info_file_path, verbose=verbose)
-        self.file_path = file_path
-        self.roi_info_file_path = roi_info_file_path
+        self.file_path = Path(file_path)
+        self.roi_info_file_path = Path(roi_info_file_path)
+        
+        # Validate files exist
+        if not self.file_path.is_file():
+            raise FileNotFoundError(f"df_f.mat file not found at {self.file_path}")
+        if not self.roi_info_file_path.is_file():
+            raise FileNotFoundError(f"ROI_info.mat file not found at {self.roi_info_file_path}")
         self.timestamps = timestamps
         self.image_shape = image_shape
         self.verbose = verbose

@@ -1,4 +1,5 @@
 from typing import Optional
+from pathlib import Path
 
 import numpy as np
 from neuroconv.basedatainterface import BaseDataInterface
@@ -30,7 +31,11 @@ class KimLabStimuliInterface(BaseDataInterface):
             Whether to print progress information
         """
         super().__init__(file_path=file_path)
-        self.file_path = file_path
+        self.file_path = Path(file_path)
+        
+        # Validate file exists
+        if not self.file_path.is_file():
+            raise FileNotFoundError(f"Visual stimuli file not found at {self.file_path}")
         self.timestamps = timestamps
         self.verbose = verbose
 
