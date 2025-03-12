@@ -23,6 +23,7 @@ dependencies = [
   "lxml", # For Dickerson lab conversion
   "czifile", # for the Cohen lab conversion confocal images
   "pynwb>=3.0.0", 
+]
 
 [project.urls]
 Repository="https://github.com/catalystneuro/cohen-lab-to-nwb"
