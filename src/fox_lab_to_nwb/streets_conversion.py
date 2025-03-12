@@ -146,7 +146,7 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
         "DeepLabCutHaltereCam": haltere_cam_dlc_interface,
     }
 
-    converter = ConverterPipe(data_interfaces=data_interfaces)
+    converter = ConverterPipe(data_interfaces=data_interfaces, verbose=verbose)
 
     # Add datetime to conversion
     metadata = converter.get_metadata()
@@ -177,6 +177,8 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
     )
 
     if verbose:
+        print(f"Conversion finished, file saved at {nwbfile_path}")
+        
         stop_time = time.time()
         conversion_time_seconds = stop_time - start_time
         if conversion_time_seconds <= 60 * 3:
