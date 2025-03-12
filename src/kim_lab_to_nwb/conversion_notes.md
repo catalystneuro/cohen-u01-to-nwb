@@ -3,14 +3,16 @@
 ## Structure of the matlab file
 
 
-# data(1,:) is time
-# data(2,:) is left wingbeat
-# data(3,:) is left-right wingbeat
-# data(4,:) is x-position of the visual pattern
-# data(5,:) is y-position of the visual pattern
-# data(6,:) is 2-photon frame synchronization signal (1 pulse corresponds to 1 frame)
-# data(7,:) is behavior camera signal (1 pulse corresponds to 1 frame)
-# data(8,:) indicates the start of a stimulus (it is empty in this example)
+* data(1,:) is time
+* data(2,:) is left wingbeat
+* data(3,:) is left-right wingbeat
+* data(4,:) is x-position of the visual pattern
+* data(5,:) is y-position of the visual pattern
+* data(6,:) is 2-photon frame synchronization signal (1 pulse corresponds to 1 frame)
+* data(7,:) is behavior camera signal (1 pulse corresponds to 1 frame)
+* data(8,:) indicates the start of a stimulus (it is empty in this example)
+
+The data shape is 495, 000 samples
 
 # Questions for the meeting on 2024-11-06
 * How is the data in the matlab aquired? which DAQ?
@@ -64,6 +66,29 @@ x_cor: shape =(17, 3)
 y_cor: shape=(17, 3)
 ```
 
+The fluoresence traces accessed like this:
+
+```python
+from pathlib import Path
+
+folder_path = Path("/home/heberto/cohen_project/Sample data/Kim Lab")
+analysis_data_folder = folder_path / "analysis"
+assert analysis_data_folder.is_dir()
+
+df_f_mat_file_path = analysis_data_folder / "df_f.mat"
+assert df_f_mat_file_path.exists()
+
+from pymatreader import read_mat
+
+delta_f = read_mat(df_f_mat_file_path)["df_f"]
+    
+print(delta_f.shape)
+(17, 495,000)
+
+```
+
+Where the first number is the number of rois and the second is the number of samples.
+
 What are the three things, vertices? So the ROIs are triangles.
 
 
@@ -72,3 +97,40 @@ This is scan image data with a self-made microscope. The specification of the ti
 
 https://docs.scanimage.org/Appendix/ScanImage%2BBigTiff%2BSpecification.html#scanimage-bigtiff-specification
 
+
+## The Stimuli
+(16, 80, 495,000) as many samples as the matlab file. 16 by 80 is the size of the displayed image as depicted on the image below:
+
+![Stimuli Example](./assets/stimuli_example.jpg)
+
+
+## Trial and Condition
+
+For every timestamps -> (trial, condition)
+
+Within trial the condition remains the same
+
+trial0   condition
+trial0   condition
+trial0   condition
+
+
+a couple of seconds
+
+trial x
+trial x
+trial x
+
+Conditions are which pattern is being shown the the fly.
+
+The presentation is organized in blocks and the trial is 0 in between.
+Within the trials, the images are shuffled.
+
+The time in between are sessions and I will write them as epochs.
+
+
+Do you have a description of patterns
+[1, 0, 2 , ...], [9, 7, ...]
+
+what is each pattern? is this an image array?
+They are the ones from visual stimuli.

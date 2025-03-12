@@ -1,0 +1,25 @@
+NWBFile:
+  keywords:
+    - Fly
+    - Drosophila
+    - Wingbeat
+    - Two-photon
+    - Calcium imaging
+    - Visual stimuli
+    - Behavior
+  related_publications:
+    - # To be filled with dois
+  session_description:
+    Experiments involving Drosophila melanogaster with two-photon calcium imaging and behavioral recordings.
+    The data includes wingbeat measurements, visual stimuli presentation, and neural activity recordings.
+  experiment_description: 'Task: Visual pattern presentation with wingbeat recordings and calcium imaging.'
+  institution: University of California, Santa Barbara
+  lab: Kim Lab
+  experimenter:
+    - Kim, Sung Soo
+    - Lai, Jennifer
+  surgery: None
+Subject:
+  sex: F
+  species: Drosophila melanogaster
+  description: Adult female fly
