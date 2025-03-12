@@ -161,35 +161,35 @@ cohen-u01-to-nwb/
 ├── README.md                       # This documentation file
 └── src/
     ├── cohen_lab_to_nwb/           # Itai Cohen Lab (Cornell University)
-    │   ├── confocal_conversion.py
-    │   ├── conversion_notes.md
-    │   ├── custom_metadata.yml
-    │   ├── free_flight_optogenetics_conversion.py
-    │   ├── phantom_video_interface.py
-    │   └── zeiss_confocal_interface.py
+    │   ├── confocal_conversion.py  # Converts Zeiss confocal microscopy data
+    │   ├── conversion_notes.md     # Documentation of data structure
+    │   ├── custom_metadata.yml     # Lab-specific metadata configuration
+    │   ├── free_flight_optogenetics_conversion.py  # Converts free flight experiments
+    │   ├── phantom_video_interface.py  # Interface for Phantom high-speed cameras
+    │   └── zeiss_confocal_interface.py  # Interface for Zeiss confocal microscopes
     ├── dickerson_lab_to_nwb/       # Brad Dickerson Lab (UNC Chapel Hill)
-    │   ├── behavior_interface.py
-    │   ├── conversion_notes.md
-    │   ├── payel_conversion.py
-    │   └── thor_interface.py
+    │   ├── behavior_interface.py   # Interface for behavioral data
+    │   ├── conversion_notes.md     # Documentation of data structure
+    │   ├── payel_conversion.py     # Main conversion script for Dickerson lab data
+    │   └── thor_interface.py       # Interface for Thor imaging systems
     ├── fox_lab_to_nwb/             # Jessica Fox Lab (Case Western Reserve)
-    │   ├── behavior.py
-    │   ├── camera_utilites.py
-    │   ├── conversion_notes.md
-    │   ├── metadata.yaml
-    │   └── streets_conversion.py
+    │   ├── behavior.py             # Behavioral data processing
+    │   ├── camera_utilites.py      # Utilities for camera data processing
+    │   ├── conversion_notes.md     # Documentation of data structure
+    │   ├── metadata.yaml           # Lab-specific metadata configuration
+    │   └── streets_conversion.py   # Main conversion script for Fox lab data
     ├── kim_lab_to_nwb/             # Sung Soo Kim Lab (UC Santa Barbara)
-    │   ├── behavior.py
-    │   ├── conversion_notes.md
-    │   ├── kim_conversion.py
-    │   ├── metadata.yaml
-    │   ├── ophys.py
-    │   ├── stimuli.py
-    │   ├── trials.py
-    │   └── utils.py
+    │   ├── behavior.py             # Behavioral data processing
+    │   ├── conversion_notes.md     # Documentation of data structure
+    │   ├── kim_conversion.py       # Main conversion script for Kim lab data
+    │   ├── metadata.yaml           # Lab-specific metadata configuration
+    │   ├── ophys.py                # Optical physiology data processing
+    │   ├── stimuli.py              # Visual stimuli data processing
+    │   ├── trials.py               # Trial data processing
+    │   └── utils.py                # Utility functions for Kim lab conversions
     └── suver_lab_to_nwb/           # Marie Suver Lab (University of Washington)
-    │   ├── conversion_notes.md
-    │   └── suver_conversion.py
+    │   ├── conversion_notes.md     # Documentation of data structure
+    │   └── suver_conversion.py     # Main conversion script for Suver lab data
 ```
 
 Each lab directory contains:
