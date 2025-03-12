@@ -51,7 +51,7 @@ This conversion processes free flight optogenetics experiments with high-speed v
 
 - Wing and body kinematics (angles, positions)
 - Optogenetic stimulation parameters
-- High-speed video data (8000 fps)
+- Behavioral video recordings
 - Subject metadata (genotype, age, sex)
 
 Conversion script: [free_flight_optogenetics_conversion.py](src/cohen_lab_to_nwb/free_flight_optogenetics_conversion.py)
@@ -85,10 +85,12 @@ from cohen_lab_to_nwb.confocal_conversion import convert_confocal_to_nwb
 
 The Dickerson Lab conversion processes Thor imaging data and behavior data from experiments studying neural activity in Drosophila. It captures:
 
-- Two-photon calcium imaging data (multiple channels)
-- Behavioral measurements
-- Stimulus presentation information
-- Experimental metadata
+- Two-photon calcium imaging data with GCaMP and tdTomato indicators acquired using the ThorImageLS system
+- Detailed wing kinematics:
+  - Left and right wing beat amplitude
+  - Left minus right wing beat amplitude (differential signal)
+- Visual stimulus tracking in X and Y directions
+- Experimental metadata and imaging parameters
 
 Conversion script: [payel_conversion.py](src/dickerson_lab_to_nwb/payel_conversion.py)
 
@@ -105,7 +107,10 @@ The Fox Lab conversion processes trial data from experiments studying insect fli
 
 - Multiple synchronized camera recordings (side, top, and haltere views)
 - DeepLabCut pose estimation data for tracking body parts
-- Behavioral measurements and stimulus presentations
+- Detailed wing kinematics:
+  - Wing beat amplitude for left and right wings
+  - Wing beat frequency
+  - Wing voltage recordings showing wing position throughout the stroke
 - Trial and experimental condition metadata
 
 Conversion script: [streets_conversion.py](src/fox_lab_to_nwb/streets_conversion.py)
@@ -126,6 +131,8 @@ The Kim Lab conversion processes experimental sessions studying sensorimotor int
 - Visual stimuli presentation data
 - ROI fluorescence traces and coordinates
 - Video recordings of fly behavior
+- Synchronization of modalities (imaging, behavior, and stimuli)
+- Experimental metadata (genotype, age, sex)
 
 Conversion script: [kim_conversion.py](src/kim_lab_to_nwb/kim_conversion.py)
 
@@ -138,7 +145,15 @@ from kim_lab_to_nwb.kim_conversion import convert_session_to_nwb
 
 ### Suver Lab Conversion (Marie Suver Lab, University of Washington) - Work in Progress
 
-The Suver Lab conversion processes session data with optogenetic stimulation and video recordings. This conversion is currently a work in progress.
+The Suver Lab conversion processes session data from experiments studying Drosophila flight control. It captures:
+
+- Patch clamp data
+- Microphone recordings of wing flapping
+- Video recordings from multiple angles (frontal and lateral views)
+- Pose estimation with DeepLabCut
+- Subject metadata (genotype, notes)
+
+This conversion is currently a work in progress.
 
 Conversion script: [suver_conversion.py](src/suver_lab_to_nwb/suver_conversion.py)
 
@@ -165,7 +180,6 @@ cohen-u01-to-nwb/
     │   ├── conversion_notes.md     # Documentation of data structure
     │   ├── custom_metadata.yml     # Lab-specific metadata configuration
     │   ├── free_flight_optogenetics_conversion.py  # Converts free flight experiments
-    │   ├── phantom_video_interface.py  # Interface for Phantom high-speed cameras
     │   └── zeiss_confocal_interface.py  # Interface for Zeiss confocal microscopes
     ├── dickerson_lab_to_nwb/       # Brad Dickerson Lab (UNC Chapel Hill)
     │   ├── behavior_interface.py   # Interface for behavioral data

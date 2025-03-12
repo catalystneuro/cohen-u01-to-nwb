@@ -77,8 +77,6 @@ class BehaviorInterface(BaseDataInterface):
         nwbfile.add_acquisition(right_wing_beat_amplitude_time_series)
         nwbfile.add_acquisition(wing_beat_frequency_time_series)
 
-
-
         # Hutchen is the shape of the signal on the sensor, means little hats
         lhutchen = daq_struct["data"][:, 6]
         rhutchen = daq_struct["data"][:, 7]
