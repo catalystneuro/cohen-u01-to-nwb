@@ -111,7 +111,7 @@ The Fox Lab conversion processes trial data from experiments studying insect fli
   - Wing beat amplitude for left and right wings
   - Wing beat frequency
   - Wing voltage recordings showing wing position throughout the stroke
-- Trial and experimental condition metadata
+- Synchronization of video, pose estimation and behavioral data.
 
 Conversion script: [streets_conversion.py](src/fox_lab_to_nwb/streets_conversion.py)
 
