@@ -1,7 +1,8 @@
 # Conversion notes
 
 ## Questions
-* What is the `ROIMask.raw` data for?
+* What is the `ROIMask.raw` data for? 
+These are used to track ROIs but accordingo to Eivind and to Payel (the contact person of the Dickerson lab) these modality is seldom used so we will be ignoring this data for now.
 * Are the two channels acquired simultaneously or interleaved?
 * What about the apparent copies of the tiff files on the experiments:
 
@@ -13,32 +14,11 @@ on:
 
 * Which channel corresponds to which fluorophore? Tdtomato and GCamp
 * What Microscope is being used? What is the name of the device?
-
+Bergamo
 
 ## Description in the the docs File
 
-```
-Data type: 2-photon stack of TIFF images 
-Size of each trial: ~900 MB
-Total expected data size: ~90 GB
-Description of folder: Each folder has two sub-folders. The sample subfolder has the stack of TIFF images. It has data from two channels – Tdtomato and GCamp. The other subfolder has data from Thorsync (used for syncing visual stimulus, wing-beat analyzer, and imaging session). 
-```
-
-## Flourophores
-
-```
-tdTomato (a red fluorescent protein)
-Excitation peak (λ_ex): ~554 nm
-Emission peak (λ_em): ~581 nm
-GCaMP (a calcium indicator based on GFP)
-Excitation peak (λ_ex): ~480 nm
-Emission peak (λ_em): ~510 nm
-```
-
-## Thor Format
-
-I believe the files were produced with the ThorImage®LS device. From the specification on its [corresponding website](https://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=9072#ad-image-0):
-
+```lhttps://www.swabianinstruments.com/static/documentation/TimeTagger/tutorials/ConfocalMicroscope.html
 ```
 Images Stored as 16-Bit TIFFs
 Image Calibration Values Stored in TIFF Metadata
@@ -88,7 +68,8 @@ Moreover, the tiff files have ome metadata embeeded, here is a example of the me
 Truncated
 ```
 
-This code can be obtained by running the folhttps://www.swabianinstruments.com/static/documentation/TimeTagger/tutorials/ConfocalMicroscope.htmllowing code:
+
+This code can be obtained by running the following code:
 
 ```python
 import tifffile as tf
@@ -143,8 +124,11 @@ left_minus_right_wing_beat.shape, left_wing_beat_amplitude.shape, visual_stimulu
 ## Subject Information
 
 ```
+Species: Drosophila melanogaster
 Age: 3 days old
 Sex: Female 
 Genotype: UAS-GCamp7f/TdTomato x Gal4-R22H05 
 ```
 
+A reference whose origin I don't remember:
+https://www.swabianinstruments.com/static/documentation/TimeTagger/tutorials/ConfocalMicroscope.html

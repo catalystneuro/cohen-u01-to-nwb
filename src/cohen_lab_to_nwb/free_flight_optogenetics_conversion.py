@@ -71,7 +71,7 @@ def convert_stimuli_experiment_to_nwb(
     experiment_date_in_ddmmyy_format = data_matlab_struct["ExprDate"]
     movie_number = data_matlab_struct["MovNum"]
     opto_stimuli_range_start_stop_ms = data_matlab_struct["OptoStimRange"]
-    opto_intensity_in_ampers = data_matlab_struct["optoIntensity"]  # TODO confirm units
+    opto_intensity_in_ampers = data_matlab_struct["optoIntensity"]
 
     # Fields with vectors
     timestamps = data_matlab_struct["t"]

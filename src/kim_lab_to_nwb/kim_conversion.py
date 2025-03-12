@@ -15,7 +15,7 @@ from kim_lab_to_nwb.ophys import KimLabROIInterface
 from kim_lab_to_nwb.stimuli import KimLabStimuliInterface
 from kim_lab_to_nwb.trials import KimLabTrialsInterface
 from kim_lab_to_nwb.behavior import BehaviorInterface
-from cohen_u01_nwb_conversion_utils.utils import detect_threshold_crossings
+from kim_lab_to_nwb.utils import detect_threshold_crossings
 from zoneinfo import ZoneInfo
 
 
