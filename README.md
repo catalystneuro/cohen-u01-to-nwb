@@ -143,7 +143,7 @@ To run this conversion, you can import the conversion function and call it with 
 from kim_lab_to_nwb.kim_conversion import convert_session_to_nwb
 ```
 
-### Suver Lab Conversion (Marie Suver Lab, University of Washington) - Work in Progress
+### Suver Lab Conversion (Marie Suver Lab, Vanderbilt University) - Work in Progress
 
 The Suver Lab conversion processes session data from experiments studying Drosophila flight control. It captures:
 

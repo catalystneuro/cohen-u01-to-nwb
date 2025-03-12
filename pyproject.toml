@@ -22,8 +22,7 @@ dependencies = [
   "scikit-image", # for the Kim lab conversion polygon mask
   "lxml", # For Dickerson lab conversion
   "czifile", # for the Cohen lab conversion confocal images
-  "pynwb=3.0.0", # Example of adding another dependency
-]
+  "pynwb>=3.0.0", 
 
 [project.urls]
 Repository="https://github.com/catalystneuro/cohen-lab-to-nwb"
