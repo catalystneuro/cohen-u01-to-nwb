@@ -18,19 +18,7 @@ Bergamo
 
 ## Description in the the docs File
 
-```
-Data type: 2-photon stack of TIFF images 
-Size of each trial: ~900 MB
-Total expected data size: ~90 GB
-Description of folder: Each folder has two sub-folders. The sample subfolder has the stack of TIFF images. It has data from two channels – Tdtomato and GCamp. The other subfolder has data from Thorsync (used for syncing visual stimulus, wing-beat analyzer, and imaging session). 
-```
-
-## Flourophores
-
-## Thor Format
-
-I believe the files were produced with the ThorImage®LS device. From the specification on its [corresponding website](https://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=9072#ad-image-0):
-
+```lhttps://www.swabianinstruments.com/static/documentation/TimeTagger/tutorials/ConfocalMicroscope.html
 ```
 Images Stored as 16-Bit TIFFs
 Image Calibration Values Stored in TIFF Metadata
@@ -80,7 +68,8 @@ Moreover, the tiff files have ome metadata embeeded, here is a example of the me
 Truncated
 ```
 
-This code can be obtained by running the folhttps://www.swabianinstruments.com/static/documentation/TimeTagger/tutorials/ConfocalMicroscope.htmllowing code:
+
+This code can be obtained by running the following code:
 
 ```python
 import tifffile as tf
@@ -141,3 +130,5 @@ Sex: Female
 Genotype: UAS-GCamp7f/TdTomato x Gal4-R22H05 
 ```
 
+A reference whose origin I don't remember:
+https://www.swabianinstruments.com/static/documentation/TimeTagger/tutorials/ConfocalMicroscope.html
