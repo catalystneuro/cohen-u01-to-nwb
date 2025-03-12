@@ -22,7 +22,7 @@ dependencies = [
   "scikit-image", # for the Kim lab conversion polygon mask
   "lxml", # For Dickerson lab conversion
   "czifile", # for the Cohen lab conversion confocal images
-  "extra-dependency==1.0.0", # Example of adding another dependency
+  "pynwb=3.0.0", # Example of adding another dependency
 ]
 
 [project.urls]

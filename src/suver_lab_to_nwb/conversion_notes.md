@@ -13,6 +13,34 @@ The top level file looks like a trial table, then the videos contain videos for 
 
 
 ## The general metadata (top level file)
+
+This is in a matlab file that is dataframe-like in its structure but some fields are 
+arrays. To extract the data of the first line use the following code:
+
+```python
+from pymatreader import read_mat
+matlab_data = read_mat(file_path)["data"]
+
+
+non_array_keys = []
+array_keys = []
+
+for key, value in matlab_data.items():
+    first_value = value[0]
+    if isinstance(first_value, np.ndarray):
+        array_keys.append(key)
+        print(f"{key=} {first_value.shape=}")
+    elif isinstance(first_value, list):
+        print(f"{key=}, len(value)={len(value)}")
+        array_keys.append(key)
+    else:
+        non_array_keys.append(key)
+        print(key, first_value)
+```
+
+This should output something like this:
+
+
 ```
 date 2024_10_24
 expNumber 2
@@ -32,7 +60,20 @@ key='puffer' first_value.shape=(100000,)
 key='tachometer' first_value.shape=(100000,)
 ```
 
-The non-list entries of this file can be thought as a data frame like this:
+What are the units of Vm, I, filteredVm, puffer, tachometer?
+
+
+The non-list entries of this file can be thought as a data frame and you can get it like this:
+
+```python
+import pandas as pd 
+
+non_array_data = {key: matlab_data[key] for key in non_array_keys}
+df = pd.DataFrame(non_array_data)
+df.head(n=15)
+```
+Which should output something like this.
+
 
 |    |       date |   expNumber |   trial | condition     | age    | genotype   |   samplerate |   fps |   scaleCurrent |   scaleVoltage |   nframes |
 |---:|-----------:|------------:|--------:|:--------------|:-------|:-----------|-------------:|------:|---------------:|---------------:|----------:|
