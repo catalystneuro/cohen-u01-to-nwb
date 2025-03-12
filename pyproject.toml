@@ -6,18 +6,16 @@ readme = "README.md"
 authors = [{ name = "CatalystNeuro", email = "ben.dichter@catalystneuro.com" }]
 maintainers = [{ name = "CatalystNeuro", email = "ben.dichter@catalystneuro.com" }]
 license = { file = "LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
 
 dependencies = [
-  "neuroconv[video]",
-  "nwbinspector",
-  "roiextractors",
+  "neuroconv[video] @ git+https://github.com/catalystneuro/neuroconv.git@main",
+  "roiextractors @ git+https://github.com/catalystneuro/roiextractors.git@main",
   "tifffile",  # For reading tiffs
   "pymatreader", # For reading matlab
   "scikit-image", # for the Kim lab conversion polygon mask
