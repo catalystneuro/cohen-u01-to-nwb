@@ -8,8 +8,6 @@ import numpy as np
 from neuroconv import ConverterPipe
 from neuroconv.datainterfaces import DeepLabCutInterface, VideoInterface
 from neuroconv.utils import dict_deep_update, load_dict_from_file
-from pynwb import NWBHDF5IO, NWBFile
-from tqdm import tqdm
 
 from suver_lab_to_nwb.patch_clamp_interface import PatchClampInterface
 from suver_lab_to_nwb.seal_test_interface import SealTestInterface
@@ -139,9 +137,8 @@ def convert_suver_lab_data(
     
     # Load and merge custom metadata
     default_metadata_file = Path(__file__).parent / "metadata.yaml"
-    if default_metadata_file.exists():
-        custom_metadata = load_dict_from_file(default_metadata_file)
-        metadata = dict_deep_update(metadata, custom_metadata)
+    custom_metadata = load_dict_from_file(default_metadata_file)
+    metadata = dict_deep_update(metadata, custom_metadata)
     
     # Set up conversion options
     conversion_options = {}
