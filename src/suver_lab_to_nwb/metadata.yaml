@@ -1,0 +1,9 @@
+NWBFile:
+  session_description: "Patch clamp recording with video and DeepLabCut data"
+  institution: "Vanderbilt University"
+  lab: "Suver Lab"
+  experimenter:
+    - Suver, Marie
+Subject:
+  species: "Drosophila melanogaster"
+  description: "Fly subject for patch clamp recording"
