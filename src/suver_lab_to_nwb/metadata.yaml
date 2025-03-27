@@ -7,14 +7,3 @@ NWBFile:
 Subject:
   species: "Drosophila melanogaster"
   description: "Fly subject for patch clamp recording"
-
-ogen_device:
-  name: "OptogeneticDevice"
-  description: "Device used for optogenetic stimulation"
-  manufacturer: "Unknown"
-
-ogen_site:
-  name: "OptogeneticSite"
-  description: "Site of optogenetic stimulation"
-  excitation_lambda: 470.0  # Blue light in nm
-  location: "Unknown"
