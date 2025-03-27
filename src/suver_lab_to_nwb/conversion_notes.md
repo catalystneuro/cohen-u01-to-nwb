@@ -1,12 +1,21 @@
 
 ## Data organization
 
-```
-[4.0K]  .
-├── [ 74M]  2024_10_24_E2.mat
-├── [ 28K]  DeepLabCut
-├── [4.0K]  seal tests
-└── [ 20K]  videos
+```bash
+Command: 	 tree -L 2
+.
+├── data
+│   ├── 2024_10_24_E2.mat  # This contains the trialized data
+│   ├── DeepLabCut
+│   ├── seal tests
+│   └── videos
+└── experiment scripts
+    ├── ComputeCellStats.m
+    ├── RunExperiment_OMN.m
+    └── SaveSingleSealTest.m
+
+6 directories, 4 files
+
 ```
 
 The top level file looks like a trial table, then the videos contain videos for at least three angles in the shared that can be mapped to the trial table.
@@ -94,6 +103,12 @@ Which should output something like this.
 | 14 | 2024_10_24 |           2 |      15 | antennae free | 3-6dpe | 24C06      |        10000 |   100 |            100 |            100 |      1000 |
 
 
+### Path Clamp
+as it can be seen this contains patch clamp data:
+
+is it whole cell?
+are the seal tests done after
+
 ## Videos
 
 They look like this:
@@ -157,23 +172,21 @@ And it seems that it only contains pose estimation for the Lateral view.
 
 There is only three files, it seems that the the last number is the trial but it is not clear. 
 
-The content of one of the fiels looks like this
+The content of one of these fields is simpler and looks like:
 
 ```python
-date None
-expNumber 6
-trial 1
-notes fly01
-SAMPLERATE 10000
-TRIAL_TIME_LIGHT 4
-PRE_TRIAL_TIME 2
-POST_TRIAL_TIME 4
-numSecOut 10
-genotype 24C06
-fps 60
-nframes 600
-key='stimTiming' first_value.shape=(100000,)
-key='micLeft' first_value.shape=(100000,)
+{'date': '2024_10_24',
+ 'expNumber': 1,
+ 'trial': 1,
+ 'numSecOut': 2,
+ 'scaleCurrent': 100,
+ 'scaleVoltage': 100,
+ 'SAMPLERATE': 10000,
+ 'Vm': array([5.62302898, 5.62302898, 5.62302898, ..., 5.59015469, 5.5572804 ,
+        5.65590327], shape=(40000,)),
+ 'I': array([6.93800059, 6.97087488, 7.5626121 , ..., 6.74075485, 6.93800059,
+        6.44488624], shape=(40000,))
+}
 ```
 
 And here is the table for the non-array values
@@ -199,14 +212,18 @@ And here is the table for the non-array values
 
 
 ## Patch clamp data questions
-* For the patch clamp, why does the data says 1,000 frames but the length of the data is `100,000 
-* samplerate: 10000, fps: 100
+* For the patch clamp, why does the data says 1,000 frames but the length of the data is `100,000`
+* samplerate: 10000, fps: 100 is the fps for the video?
 * is dep days post eclosing (e.g. 6-8dpe) or days post patching?
 * What is scale current?
 * What is scale voltage?
 * What does the tachometer measures or represents? It is usually used to measure the speed of a rotating object, such as a motor or other machine.
 * What about the puffer?
 * Description and units of `Vm`, `Im`, `tachometer`, `puffer`, `filteredVm`
+* What device was used to record the data?
+* Are all the experiments current clamp?
+* Any information about the electrodes?
+
 
 ## Optogenetic Stimuli data
 * `SAMPLERATE` (10_000) vs `fps` (60) vs nframes (6000)

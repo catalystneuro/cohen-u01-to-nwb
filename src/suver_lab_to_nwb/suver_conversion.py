@@ -3,37 +3,47 @@ import os
 import time
 from datetime import datetime
 import re
+import uuid
+import zoneinfo
+from typing import Dict, Any, Optional, Union, List
 
 import numpy as np
-from neuroconv import ConverterPipe
 from neuroconv.datainterfaces import DeepLabCutInterface, VideoInterface
-from neuroconv.utils import dict_deep_update, load_dict_from_file
+from pymatreader import read_mat
+from pynwb import NWBFile, NWBHDF5IO
+from pynwb.icephys import CurrentClampSeries, CurrentClampStimulusSeries
+from pynwb.base import TimeSeries
 
-from suver_lab_to_nwb.patch_clamp_interface import PatchClampInterface
-from suver_lab_to_nwb.seal_test_interface import SealTestInterface
 
-
-def convert_suver_lab_data(
-    data_dir: str | Path,
-    output_dir: str | Path,
-    session_id: str = None,
+def convert_session_to_nwb(
+    matlab_data_file_path: Union[str, Path],
+    video_file_path: Union[str, Path],
+    deeplab_cut_file_path: Union[str, Path],
+    output_dir: Union[str, Path],
+    trial_index: int = 0,
+    overwrite: bool = False,
     verbose: bool = True
 ) -> Path:
     """
     Convert Suver Lab data to NWB format.
     
-    This function converts patch clamp data, videos, DeepLabCut pose estimation,
-    and seal test data from the Suver Lab to the NWB format.
+    This function converts patch clamp data, videos, and DeepLabCut pose estimation
+    from the Suver Lab to the NWB format.
     
     Parameters
     ----------
-    data_dir : str or Path
-        Path to the directory containing the data.
+    matlab_data_file_path : str or Path
+        Path to the MATLAB file containing patch clamp data.
+    video_file_path : str or Path
+        Path to the video file.
+    deeplab_cut_file_path : str or Path
+        Path to the DeepLabCut file.
     output_dir : str or Path
         Path to the directory where the NWB file will be saved.
-    session_id : str, optional
-        Session ID to use for the conversion. If None, it will be extracted from
-        the directory name.
+    trial_index : int, default: 0
+        Index of the trial to convert.
+    overwrite : bool, default: False
+        Whether to overwrite existing NWB files.
     verbose : bool, default: True
         Whether to print verbose output.
         
@@ -41,123 +51,145 @@ def convert_suver_lab_data(
     -------
     nwbfile_path : Path
         Path to the generated NWB file.
-        
-    Notes
-    -----
-    The function expects the following data structure:
-    - A main patch clamp data file: {session_id}.mat
-    - Video files in a 'videos' subdirectory or the main directory
-    - DeepLabCut files in a 'DeepLabCut' subdirectory or the main directory
-    - Seal test files in a 'seal tests' subdirectory or the main directory
-    
-    The function will create a single NWB file containing all the data.
     """
     # Start timing
     start_time = time.time()
     
     # Convert paths to Path objects
-    data_dir = Path(data_dir)
+    matlab_data_file_path = Path(matlab_data_file_path)
+    video_file_path = Path(video_file_path)
+    deeplab_cut_file_path = Path(deeplab_cut_file_path)
     output_dir = Path(output_dir)
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Get session ID from directory name if not provided
-    if session_id is None:
-        # Extract date and experiment number from directory name
-        match = re.search(r"(\d{4}_\d{2}_\d{2})_E(\d+)", data_dir.name)
-        if match:
-            date_str, exp_num = match.groups()
-            session_id = f"{date_str}_E{exp_num}"
-        else:
-            session_id = data_dir.name
+    # Read the MATLAB data
+    session_data = read_mat(matlab_data_file_path)["data"]
+    # Extract trial data
+    trial_data_index = {key: value[trial_index] for key, value in session_data.items()}
+    session_date = trial_data_index["date"]
+    trial = trial_data_index["trial"]
+    experiment_number = trial_data_index["expNumber"]
+    condition = trial_data_index["condition"]
+    age = trial_data_index["age"]
+    genotype = trial_data_index["genotype"]
+    sample_rate = float(trial_data_index["samplerate"])
+    fps = trial_data_index["fps"]  # Video frame rate
+    scale_current = trial_data_index["scaleCurrent"]
+    scale_voltage = trial_data_index["scaleVoltage"]
+    nframes = trial_data_index["nframes"]  # Number of video frames
+    voltage = trial_data_index["Vm"]
+    current = trial_data_index["I"]
+    filtered_voltage = trial_data_index["filteredVm"]
+    puffer_data = trial_data_index["puffer"]
+    tachometer_data = trial_data_index["tachometer"]
+    # Transform session date (format: 2024_10_24) to datetime object
+    session_start_time = datetime.strptime(session_date, "%Y_%m_%d")
+    vanderbilt_time_zone = zoneinfo.ZoneInfo("America/Chicago")
+    session_start_time = session_start_time.replace(tzinfo=vanderbilt_time_zone)
     
-    # Find the main patch clamp data file
-    patch_clamp_file = data_dir / f"{session_id}.mat"
-    if not patch_clamp_file.exists():
-        raise FileNotFoundError(f"Patch clamp file not found: {patch_clamp_file}")
+    # Create session ID and description
+    session_id = f"{condition}_{trial}_{age}_{genotype}"
+    session_description = f"Patch clamp recording from {session_date}, trial {trial}"
     
-    # Find video files
-    video_dir = data_dir / "videos"
-    if not video_dir.exists():
-        video_dir = data_dir  # Videos might be in the main directory
-    
-    video_files = {}
-    for view in ["lateral_flyLeft", "lateral_flyRight", "lateral_ventral"]:
-        pattern = f"{session_id}_Video_{view}_*.avi"
-        matching_files = sorted(list(video_dir.glob(pattern)))
-        if matching_files:
-            video_files[view] = matching_files
-    
-    # Find DeepLabCut files
-    dlc_dir = data_dir / "DeepLabCut"
-    if not dlc_dir.exists():
-        dlc_dir = data_dir  # DLC files might be in the main directory
-    
-    pattern = f"{session_id}_Video_*DLC_*.h5"
-    dlc_files = sorted(list(dlc_dir.glob(pattern)))
-    
-    # Find seal test files
-    seal_test_dir = data_dir / "seal tests"
-    if not seal_test_dir.exists():
-        seal_test_dir = data_dir  # Seal test files might be in the main directory
-    
-    date_str = session_id.split("_E")[0]
-    pattern = f"{date_str}_SealTest_*.mat"
-    seal_test_files = sorted(list(seal_test_dir.glob(pattern)))
-
-    # Initialize interfaces
-    data_interfaces = {}
-    
-    # Add patch clamp interface
-    patch_clamp_interface = PatchClampInterface(file_path=patch_clamp_file, verbose=verbose)
-    data_interfaces["PatchClamp"] = patch_clamp_interface
-    
-    # Add video interfaces
-    for view, files in video_files.items():
-        video_interface = VideoInterface(file_paths=files, verbose=verbose)
-        data_interfaces[f"Video_{view}"] = video_interface
-    
-    # Add DeepLabCut interfaces
-    for i, dlc_file in enumerate(dlc_files):
-        dlc_interface = DeepLabCutInterface(file_path=dlc_file, verbose=verbose)
-        # Extract view from filename
-        view_match = re.search(r"Video_(lateral_\w+)", dlc_file.name)
-        view = view_match.group(1) if view_match else f"view{i+1}"
-        data_interfaces[f"DeepLabCut_{view}"] = dlc_interface
-    
-    # Add seal test interfaces
-    for i, seal_test_file in enumerate(seal_test_files):
-        seal_test_interface = SealTestInterface(file_path=seal_test_file, verbose=verbose)
-        data_interfaces[f"SealTest_{i+1}"] = seal_test_interface
-    
-    # Create converter
-    converter = ConverterPipe(data_interfaces=data_interfaces, verbose=verbose)
-    
-    # Get metadata
-    metadata = converter.get_metadata()
-    
-    # Load and merge custom metadata
-    default_metadata_file = Path(__file__).parent / "metadata.yaml"
-    custom_metadata = load_dict_from_file(default_metadata_file)
-    metadata = dict_deep_update(metadata, custom_metadata)
-    
-    # Set up conversion options
-    conversion_options = {}
-    
-    # Add conversion options for DeepLabCut interfaces
-    for interface_name in data_interfaces:
-        if interface_name.startswith("DeepLabCut_"):
-            view = interface_name.replace("DeepLabCut_", "")
-            conversion_options[interface_name] = {"container_name": f"PoseEstimation_{view}"}
-    
-    # Run conversion
-    # Create output file path
-    nwbfile_path = output_dir / f"{session_id}.nwb"
-    converter.run_conversion(
-        nwbfile_path=nwbfile_path,
-        metadata=metadata,
-        conversion_options=conversion_options,
-        overwrite=True,
+    # Create NWB file
+    identifier = str(uuid.uuid4())
+    nwbfile = NWBFile(
+        session_start_time=session_start_time,
+        session_description=session_description,
+        identifier=identifier,
+        session_id=session_id
     )
+
+    # Create device and electrode
+    device = nwbfile.create_device(name="Patch clamp amplifier")
+    
+    intracellular_electrode = nwbfile.create_icephys_electrode(
+        name=f"Electrode_trial{trial}",
+        description=f"Patch clamp electrode for trial {trial}",
+        device=device,
+        slice="Drosophila brain",  # Information about the slice preparation
+        seal="TBD",  # Seal resistance
+    )
+    
+    # Create stimulus and response series
+    stimulus = CurrentClampStimulusSeries(
+        name=f"stimulus_trial{trial}",
+        description="Current injection stimulus",
+        data=current,
+        starting_time=0.0,
+        rate=sample_rate,
+        electrode=intracellular_electrode,
+    )
+    
+    response = CurrentClampSeries(
+        name=f"response_trial{trial}",
+        description="Membrane potential recording",
+        data=voltage,
+        starting_time=0.0,
+        rate=sample_rate,
+        electrode=intracellular_electrode,
+    )
+    
+    # Add the current clamp series to the NWB file
+    rowindex = nwbfile.add_intracellular_recording(
+        electrode=intracellular_electrode, 
+        stimulus=stimulus, 
+        response=response, 
+        id=trial
+    )
+    
+    # Add filtered voltage as a separate series
+    filtered_response = CurrentClampSeries(
+        name=f"filtered_response_trial{trial}",
+        description="Filtered membrane potential recording",
+        data=filtered_voltage,
+        starting_time=0.0,
+        rate=sample_rate,
+        electrode=intracellular_electrode,
+    )
+    nwbfile.add_acquisition(filtered_response)
+    
+    # Add puffer and tachometer data
+    time_series_puffer = TimeSeries(
+        name=f"puffer_trial{trial}",
+        description="Puffer stimulus delivery",
+        data=puffer_data,
+        unit="V",
+        starting_time=0.0,
+        rate=sample_rate,
+    )
+    
+    time_series_tachometer = TimeSeries(
+        name=f"tachometer_trial{trial}",
+        description="Wing beat frequency measurement",
+        data=tachometer_data,
+        unit="V",
+        starting_time=0.0,
+        rate=sample_rate,
+    )
+    
+    nwbfile.add_acquisition(time_series_puffer)
+    nwbfile.add_acquisition(time_series_tachometer)
+    
+    # Add video data
+    video_interface = VideoInterface(
+        file_path=[video_file_path],
+    )
+    video_interface.add_to_nwbfile(nwbfile=nwbfile)
+    
+    # Add DeepLabCut data
+    dlc_interface = DeepLabCutInterface(file_path=deeplab_cut_file_path)
+    dlc_interface.add_to_nwbfile(nwbfile=nwbfile)
+    
+    # Save the NWB file
+    nwbfile_path = output_dir / f"{session_id}_trial{trial_index}.nwb"
+    
+    # Check if file exists and handle overwrite
+    if nwbfile_path.exists() and not overwrite:
+        raise FileExistsError(f"File {nwbfile_path} already exists. Set overwrite=True to overwrite.")
+    
+    with NWBHDF5IO(nwbfile_path, mode="w") as io:
+        io.write(nwbfile)
     
     # Print conversion time
     if verbose:
@@ -173,18 +205,37 @@ def convert_suver_lab_data(
         print(f"NWB file saved to: {nwbfile_path}")
     
     return nwbfile_path
-
-
 if __name__ == "__main__":
-    # Set paths
-    data_dir = "/home/heberto/cohen_project/Sample data/Suver Lab/E.phys/data"
-    output_dir = "/home/heberto/cohen_project/Sample data/Suver Lab/nwb"
+    # Set base paths
+    data_dir = Path("/home/heberto/cohen_project/Sample data/Suver Lab/E.phys/data")
+    output_dir = Path("/home/heberto/cohen_project/Sample data/Suver Lab/nwb")
+    
+    # Set specific file paths
+    session_date = "2024_10_24"
+    experiment_number = "2"
+    trial_index = 0  # Use the first trial by default
+    
+    # Determine file paths
+    matlab_data_file_path = data_dir / f"{session_date}_E{experiment_number}.mat"
+    
+    # Read the MATLAB data to get trial information
+    session_data = read_mat(matlab_data_file_path)["data"]
+    trial = session_data["trial"][trial_index]
+    
+    # Determine video and DeepLabCut file paths
+    view = "Video_lateral_flyLeft"
+    video_file_path = data_dir / "videos" / f"{session_date}_E{experiment_number}_{view}{trial}.avi"
+    
+    deeplab_cut_prefix = "DLC_resnet50_2x_JONsEffect_noGlueOct29shuffle1_1030000.h5"
+    deeplab_cut_file_path = data_dir / "DeepLabCut" / f"{video_file_path.stem}{deeplab_cut_prefix}"
     
     # Run conversion
-    convert_suver_lab_data(
-        data_dir=data_dir,
+    convert_session_to_nwb(
+        matlab_data_file_path=matlab_data_file_path,
+        video_file_path=video_file_path,
+        deeplab_cut_file_path=deeplab_cut_file_path,
         output_dir=output_dir,
-        session_id="2024_10_24_E2",
+        trial_index=trial_index,
         overwrite=True,
         verbose=True
     )
