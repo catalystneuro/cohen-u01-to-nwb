@@ -241,7 +241,6 @@ def convert_session_to_nwb(
         videos_dir = data_dir / "videos"
         dlc_dir = data_dir / "DeepLabCut"
 
-
         # 1. Video_lateral_flyLeft
         angle_name = "LateralFlyLeft"
         fly_left_video_path = (
