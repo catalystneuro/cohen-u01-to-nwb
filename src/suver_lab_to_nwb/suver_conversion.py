@@ -241,7 +241,6 @@ def convert_session_to_nwb(
         videos_dir = data_dir / "videos"
         dlc_dir = data_dir / "DeepLabCut"
 
-        # Explicitly handle each video view
 
         # 1. Video_lateral_flyLeft
         angle_name = "LateralFlyLeft"
@@ -253,16 +252,16 @@ def convert_session_to_nwb(
                 file_paths=[fly_left_video_path],
                 video_name=f"Video{angle_name}_trial{formatted_trial}",
             )
-            video_interface.add_to_nwbfile(nwbfile=nwbfile)
             video_interface.set_aligned_timestamps([video_timestamps])
+            video_interface.add_to_nwbfile(nwbfile=nwbfile)
 
             # Add DeepLabCut data for the flyLeft view
             dlc_file_path = dlc_dir / f"{fly_left_video_path.stem}{dlc_suffix}"
             if dlc_file_path.exists():
                 dlc_interface = DeepLabCutInterface(file_path=dlc_file_path)
                 container_name = f"PoseEstimation{angle_name}_trial{formatted_trial}"
-                dlc_interface.add_to_nwbfile(nwbfile=nwbfile, container_name=container_name)
                 dlc_interface.set_aligned_timestamps(video_timestamps)
+                dlc_interface.add_to_nwbfile(nwbfile=nwbfile, container_name=container_name)
 
         # 2. Video_lateral_flyRight_
         angle_name = "LateralFlyRight"
@@ -275,8 +274,8 @@ def convert_session_to_nwb(
                 file_paths=[fly_right_video_path],
                 video_name=f"Video{angle_name}_trial{formatted_trial}",
             )
-            video_interface.add_to_nwbfile(nwbfile=nwbfile)
             video_interface.set_aligned_timestamps([video_timestamps])
+            video_interface.add_to_nwbfile(nwbfile=nwbfile)
 
         # 3. Video_lateral_ventral_
         angle_name = "LateralVentral"
@@ -289,8 +288,8 @@ def convert_session_to_nwb(
                 file_paths=[ventral_video_path],
                 video_name=f"Video{angle_name}_trial{formatted_trial}",
             )
-            video_interface.add_to_nwbfile(nwbfile=nwbfile)
             video_interface.set_aligned_timestamps([video_timestamps])
+            video_interface.add_to_nwbfile(nwbfile=nwbfile)
 
     # Save the NWB file
     nwbfile_path = output_dir / f"{session_id}_experiment{experiment_number}.nwb"
