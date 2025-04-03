@@ -14,6 +14,7 @@ from pynwb import NWBFile, NWBHDF5IO
 from pynwb.file import Subject
 from pynwb.icephys import CurrentClampSeries, CurrentClampStimulusSeries
 from pynwb.base import TimeSeries
+from neuroconv.tools.nwb_helpers import configure_and_write_nwbfile
 
 
 def convert_session_to_nwb(
@@ -246,6 +247,7 @@ def convert_session_to_nwb(
         if fly_left_video_path.exists():
             video_interface = ExternalVideoInterface(
                 file_paths=[fly_left_video_path],
+                video_name=f"Video{angle_name}_trial{formatted_trial}",
             )
             video_interface.add_to_nwbfile(nwbfile=nwbfile)
             
@@ -257,21 +259,25 @@ def convert_session_to_nwb(
                 dlc_interface.add_to_nwbfile(nwbfile=nwbfile, container_name=container_name)
         
         # 2. Video_lateral_flyRight_
+        angel_name = "LateralFlyRight"
         fly_right_video_path = videos_dir / f"{session_date}_E{experiment_number}_Video_lateral_flyRight_{formatted_trial}.avi"
         if fly_right_video_path.exists():
 
             
             video_interface = ExternalVideoInterface(
                 file_paths=[fly_right_video_path],
+                video_name=f"Video{angel_name}_trial{formatted_trial}",
             )
             video_interface.add_to_nwbfile(nwbfile=nwbfile)
         
         # 3. Video_lateral_ventral_
+        angle_name = "LateralVentral"
         ventral_video_path = videos_dir / f"{session_date}_E{experiment_number}_Video_lateral_ventral_{formatted_trial}.avi"
         if ventral_video_path.exists():
 
             video_interface = ExternalVideoInterface(
                 file_paths=[ventral_video_path],
+                video_name=f"Video{angle_name}_trial{formatted_trial}",
             )
             video_interface.add_to_nwbfile(nwbfile=nwbfile)
     
@@ -282,8 +288,7 @@ def convert_session_to_nwb(
     if nwbfile_path.exists() and not overwrite:
         raise FileExistsError(f"File {nwbfile_path} already exists. Set overwrite=True to overwrite.")
     
-    with NWBHDF5IO(nwbfile_path, mode="w") as io:
-        io.write(nwbfile)
+    configure_and_write_nwbfile(nwbfile=nwbfile, nwbfile_path=nwbfile_path)  
     
     # Print conversion time
     if verbose:
@@ -319,6 +324,6 @@ if __name__ == "__main__":
         output_dir=output_dir,
         data_dir=data_dir,
         overwrite=True,
-        stub_test=True,
+        stub_test=False,
         verbose=True
     )
