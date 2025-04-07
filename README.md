@@ -2,10 +2,10 @@
 
 NWB conversion scripts for multiple labs' data to the [Neurodata Without Borders](https://nwb-overview.readthedocs.io/) data format. This repository contains conversion tools for data from the following laboratories:
 
-- Marie Suver Lab (University of Washington)
+- Marie Suver Lab (Vanderbilt University)
 - Itai Cohen Lab (Cornell University)
 - Sung Soo Kim Lab (University of California, Santa Barbara)
-- Brad Dickerson Lab (University of North Carolina at Chapel Hill)
+- Brad Dickerson Lab (Princenton University)
 - Jessica Fox Lab (Case Western Reserve University)
 
 ## Installation from GitHub
