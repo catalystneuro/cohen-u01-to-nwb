@@ -1,20 +1,115 @@
 from pathlib import Path
-import os
 import time
 from datetime import datetime
-import re
 import uuid
 import zoneinfo
-from typing import Dict, Any, Optional, Union, List
+from typing import Optional, Union
 
 import numpy as np
 from neuroconv.datainterfaces import DeepLabCutInterface, ExternalVideoInterface
 from pymatreader import read_mat
-from pynwb import NWBFile, NWBHDF5IO
+from pynwb import NWBFile
 from pynwb.file import Subject
 from pynwb.icephys import CurrentClampSeries, CurrentClampStimulusSeries
 from pynwb.base import TimeSeries
 from neuroconv.tools.nwb_helpers import configure_and_write_nwbfile
+
+
+def calculate_seal_test_metrics(current, voltage):
+    """
+    Calculate metrics for a seal test based on current and voltage traces.
+    
+    This is a simplified version of the ComputeCellStats.m algorithm.
+    
+    Parameters
+    ----------
+    current : numpy.ndarray
+        Current trace data
+    voltage : numpy.ndarray
+        Voltage trace data
+    
+    Returns
+    -------
+    dict
+        Dictionary containing calculated metrics
+    """
+    # Constants from ComputeCellStats.m
+    THRESH = 3  # Threshold for detecting pulse edges
+    SCALE = 10  # Scale factor for resistance calculations
+    
+    # Find pulse onset/offset
+    on_indices = np.where(np.diff(voltage) > THRESH)[0]
+    off_indices = np.where(np.diff(voltage) < -THRESH)[0]
+    
+    # Skip if we can't find clear pulses
+    if len(on_indices) == 0 or len(off_indices) == 0:
+        return {
+            "ra": np.nan,
+            "rinput": np.nan,
+            "i0": np.nan,
+            "im_pulse": np.nan,
+            "vm_pulse": np.nan
+        }
+    
+    # Ensure off_indices come after on_indices
+    while off_indices[0] < on_indices[0]:
+        off_indices = off_indices[1:]
+        if len(off_indices) == 0:
+            return {
+                "ra": np.nan,
+                "rinput": np.nan,
+                "i0": np.nan,
+                "im_pulse": np.nan,
+                "vm_pulse": np.nan
+            }
+    
+    # Get baseline values (before pulse)
+    pre_samples = 50  # Number of samples before pulse to use for baseline
+    if on_indices[0] > pre_samples:
+        base_vm = np.mean(voltage[:on_indices[0]-5])
+        base_im = np.mean(current[:on_indices[0]-5])
+    else:
+        base_vm = voltage[0]
+        base_im = current[0]
+    
+    # Get steady-state values during pulse
+    pulse_length = off_indices[0] - on_indices[0]
+    center_pulse = pulse_length // 2
+    fraction = 0.25  # Use middle 50% of pulse
+    
+    section_begin = on_indices[0] + center_pulse - int(fraction * pulse_length)
+    section_end = on_indices[0] + center_pulse + int(fraction * pulse_length)
+    
+    # Ensure indices are within bounds
+    section_begin = max(0, section_begin)
+    section_end = min(len(voltage) - 1, section_end)
+    
+    vm_pulse = np.mean(voltage[section_begin:section_end]) - base_vm
+    im_pulse = np.mean(current[section_begin:section_end]) - base_im
+    
+    # Find peak current
+    i0_idx = np.argmax(current[on_indices[0]:off_indices[0]]) + on_indices[0]
+    i0 = current[i0_idx] - base_im
+    
+    # Calculate resistances
+    if im_pulse != 0:
+        rinput = vm_pulse / im_pulse * SCALE  # Input resistance in MOhm
+    else:
+        rinput = np.nan
+    
+    if i0 != 0:
+        ga = i0 / vm_pulse  # Conductance in nS
+        ra = 1 / ga * SCALE if ga != 0 else np.nan  # Access resistance in MOhm
+    else:
+        ra = np.nan
+    
+    return {
+        "ra": ra,
+        "rinput": rinput,
+        "i0": i0,
+        "im_pulse": im_pulse,
+        "vm_pulse": vm_pulse
+    }
 
 
 def convert_session_to_nwb(
@@ -35,8 +130,8 @@ def convert_session_to_nwb(
 
     The function uses specific file naming conventions:
     - Video files: {date}_E{experiment_number}_Video_lateral_flyLeft{trial}.avi
-                  {date}_E{experiment_number}_Video_lateral_flyRight_{trial}.avi
-                  {date}_E{experiment_number}_Video_lateral_ventral_{trial}.avi
+                {date}_E{experiment_number}_Video_lateral_flyRight_{trial}.avi
+                {date}_E{experiment_number}_Video_lateral_ventral_{trial}.avi
     - DeepLabCut files: {date}_E{experiment_number}_Video_lateral_flyLeft{trial}DLC_resnet50_2x_JONsEffect_noGlueOct29shuffle1_1030000.h5
 
     Parameters
@@ -92,6 +187,7 @@ def convert_session_to_nwb(
 
     # Create session ID and description
     session_id = f"{condition}_{age}_{genotype}"
+    num_trials = len(session_data["trial"])
 
     # Create a more detailed session description based on the email information
     session_description = (
@@ -132,16 +228,117 @@ def convert_session_to_nwb(
     # Define the DeepLabCut suffix based on the provided file patterns
     dlc_suffix = "DLC_resnet50_2x_JONsEffect_noGlueOct29shuffle1_1030000.h5"
 
+    # First, process seal test 15 to get the seal resistance value
+    seal_tests_dir = data_dir / "seal tests"
+    seal_test_files = list(seal_tests_dir.glob(f"{session_date}_SealTest_*.mat"))
+    
+    # Default seal value
+    seal_value = "TBD"
+    
+    # Look for seal test 15 to get the seal resistance
+    for seal_test_file in seal_test_files:
+        seal_test_num = seal_test_file.stem.split('_')[-1]
+        if seal_test_num == "15":
+            # Read the seal test data
+            seal_test_trial_data = read_mat(seal_test_file)["data"]
+            
+            # Extract the first (and only) trial data            
+            # Get the current and voltage data
+            seal_test_current = seal_test_trial_data["I"]
+            seal_test_voltage = seal_test_trial_data["Vm"]
+            seal_test_sample_rate = float(seal_test_trial_data["SAMPLERATE"])
+            
+            # Calculate metrics
+            metrics = calculate_seal_test_metrics(seal_test_current, seal_test_voltage)
+            
+            # Set seal value if rinput is available
+            if not np.isnan(metrics["rinput"]):
+                seal_value = f"{metrics['rinput']:.2f} MOhm"
+            
+            break
+    
+    # Create the electrode with the correct seal resistance value
     intracellular_electrode = nwbfile.create_icephys_electrode(
         name=f"IcephysElectrode",
         description=f"Patch clamp electrode for trial",
         device=device,
         slice="Drosophila brain",  # Information about the slice preparation
-        seal="TBD",  # Seal resistance
+        seal=seal_value,  # Seal resistance from seal test 15
     )
 
+    # Now process all seal tests to add them to the NWB file
+    
+    for seal_test_file in seal_test_files:
+        # Extract seal test number from filename
+        seal_test_num = seal_test_file.stem.split('_')[-1]
+        
+        # Read the seal test data
+        seal_test_trial_data = read_mat(seal_test_file)["data"]
+                
+        # Get the current and voltage data
+        seal_test_current = seal_test_trial_data["I"]
+        seal_test_voltage = seal_test_trial_data["Vm"]
+        seal_test_sample_rate = float(seal_test_trial_data["SAMPLERATE"])
+        
+        # Get detailed description based on seal test number
+        if seal_test_num == "14":
+            description = "Electrode resistance measurement (Rinput) performed before the experiment to assess electrode quality"
+            timing = "pre-experiment"
+        elif seal_test_num == "15":
+            description = "Seal quality measurement (Rinput) performed before the experiment to assess the quality of the seal between the cell and the electrode"
+            timing = "pre-experiment"
+        elif seal_test_num == "16":
+            description = "Intracellular access quality measurement performed before the experiment by comparing access resistance (Raccess) to input resistance (Rinput)"
+            timing = "pre-experiment"
+        elif seal_test_num == "17":
+            description = "Intracellular access quality measurement performed after the experiment to assess cell health during recording"
+            timing = "post-experiment"
+        else:
+            description = f"Seal test {seal_test_num}"
+            timing = "unknown"
+        
+        # Calculate metrics if possible
+        metrics = calculate_seal_test_metrics(seal_test_current, seal_test_voltage)
+        
+        # Add metrics to description if available
+        metrics_text = ""
+        if not np.isnan(metrics["rinput"]):
+            metrics_text += f" Input resistance: {metrics['rinput']:.2f} MOhm."
+        if not np.isnan(metrics["ra"]):
+            metrics_text += f" Access resistance: {metrics['ra']:.2f} MOhm."
+        
+        # Create current clamp stimulus series for the seal test
+        seal_test_stimulus = CurrentClampStimulusSeries(
+            name=f"CurrentClampStimulusSeriesSealTest{seal_test_num}",
+            description=f"{description} ({timing}).{metrics_text} Current clamp stimulus with 10mV peak-peak pulse at 100 Hz.",
+            data=seal_test_current,
+            starting_time=np.nan,  # The time is unclear
+            rate=seal_test_sample_rate,
+            electrode=intracellular_electrode,
+        )
+        
+        # Add the seal test stimulus to the NWB file
+        
+        # Also add the seal test response
+        seal_test_response = CurrentClampSeries(
+            name=f"CurrentClampSeriesSealTest{seal_test_num}",
+            description=f"{description} ({timing}).{metrics_text} Membrane potential recording in response to 10mV peak-peak pulse at 100 Hz.",
+            data=seal_test_voltage,
+            starting_time=np.nan,  # Using np.nan because this information is unavailable
+            rate=seal_test_sample_rate,
+            electrode=intracellular_electrode,
+        )
+        
+        # Add the seal test response to the NWB file
+        seal_test_id = int(seal_test_num)  + num_trials
+        nwbfile.add_intracellular_recording(
+            electrode=intracellular_electrode,
+            stimulus=seal_test_stimulus,
+            response=seal_test_response,
+            id=seal_test_id,
+        )
+    
     # Process each trial
-    num_trials = len(session_data["trial"])
     # Calculate number of digits needed for zero-padding based on total trials
     num_digits = len(str(num_trials))
 
@@ -188,7 +385,7 @@ def convert_session_to_nwb(
         )
 
         response = CurrentClampSeries(
-            name=f"CurrentClampResponseTrial{formatted_trial}",
+            name=f"CurrentClampSeriesTrial{formatted_trial}",
             description="Membrane potential recording",
             data=voltage,
             starting_time=trial_start_time,
