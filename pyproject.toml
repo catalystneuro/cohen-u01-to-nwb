@@ -14,11 +14,11 @@ classifiers = [
 ]
 
 dependencies = [
-  "neuroconv[video] @ git+https://github.com/catalystneuro/neuroconv.git@main",
-  "roiextractors @ git+https://github.com/catalystneuro/roiextractors.git@main",
+  "neuroconv[video]>=0.7.2",
+  "roiextractors>=0.5.11",
   "ndx-pose>=0.2.1",
   "tifffile",  # For reading tiffs
-  "pymatreader", # For reading matlab
+  "pymatreader", # For reading matlab (most conversions
   "scikit-image", # for the Kim lab conversion polygon mask
   "lxml", # For Dickerson lab conversion
   "czifile", # for the Cohen lab conversion confocal images
