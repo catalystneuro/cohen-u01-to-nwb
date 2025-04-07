@@ -103,11 +103,7 @@ Which should output something like this.
 | 14 | 2024_10_24 |           2 |      15 | antennae free | 3-6dpe | 24C06      |        10000 |   100 |            100 |            100 |      1000 |
 
 
-### Path Clamp
-as it can be seen this contains patch clamp data:
 
-is it whole cell?
-are the seal tests done after
 
 ## Videos
 
