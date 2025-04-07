@@ -81,7 +81,7 @@ To run this conversion, you can import the conversion function and call it with 
 from cohen_lab_to_nwb.confocal_conversion import convert_confocal_to_nwb
 ```
 
-### Dickerson Lab Conversion (Brad Dickerson Lab, UNC Chapel Hill)
+### Dickerson Lab Conversion (Brad Dickerson Lab, Princeton University)
 
 The Dickerson Lab conversion processes Thor imaging data and behavior data from experiments studying neural activity in Drosophila. It captures:
 
