@@ -143,17 +143,18 @@ To run this conversion, you can import the conversion function and call it with 
 from kim_lab_to_nwb.kim_conversion import convert_session_to_nwb
 ```
 
-### Suver Lab Conversion (Marie Suver Lab, Vanderbilt University) - Work in Progress
+### Suver Lab Conversion (Marie Suver Lab, Vanderbilt University)
 
-The Suver Lab conversion processes session data from experiments studying Drosophila flight control. It captures:
+The Suver Lab conversion processes session data from experiments studying Drosophila flight control and sensory integration. It captures:
 
-- Patch clamp data
-- Microphone recordings of wing flapping
-- Video recordings from multiple angles (frontal and lateral views)
+- In-vivo whole-cell patch clamp recordings (current and voltage)
+- Filtered membrane potential recordings
+- Tachometer data for detecting wing flapping/flight
+- Puffer stimulus data (air puff sensory stimulus)
+- Video recordings from multiple angles (lateral fly left, lateral fly right, lateral ventral)
 - Pose estimation with DeepLabCut
-- Subject metadata (genotype, notes)
-
-This conversion is currently a work in progress.
+- Seal test data with calculated metrics (input resistance, access resistance)
+- Subject metadata (genotype, age, sex)
 
 Conversion script: [suver_conversion.py](src/suver_lab_to_nwb/suver_conversion.py)
 
@@ -161,7 +162,7 @@ To run this conversion, you can import the conversion function and call it with 
 
 ```python
 # Import the conversion function
-from suver_lab_to_nwb.suver_conversion import convert_session
+from suver_lab_to_nwb.suver_conversion import convert_session_to_nwb
 ```
 
 ## Repository Structure
