@@ -163,6 +163,8 @@ def convert_session_to_nwb(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+
+
     # Infer data_dir if not provided
     if data_dir is None:
         data_dir = matlab_data_file_path.parent
@@ -177,7 +179,10 @@ def convert_session_to_nwb(
     session_date = first_trial_data["date"]
     experiment_number = first_trial_data["expNumber"]
     condition = first_trial_data["condition"]
-    age = first_trial_data["age"]
+    age = first_trial_data["age"]  
+    # Transform 3-6dpe to P3D/P6D 
+    convert_to_iso_duration = lambda s: f"P{s.split('-')[0]}D/P{s.split('-')[1].removesuffix('dpe')}D"
+    age_formated = convert_to_iso_duration(age) 
     genotype = first_trial_data["genotype"]
 
     # Transform session date (format: 2024_10_24) to datetime object
@@ -202,8 +207,10 @@ def convert_session_to_nwb(
     subject = Subject(
         species="Drosophila melanogaster",
         description="UAS-10xGFP;GMR-24C06-GAL4 raised on standard food and on a 12h light/dark cycle",
-        age=age,
+        age=age_formated,
         genotype=genotype,
+        sex="F",
+        subject_id="Fly", # TBD
     )
 
     # Create NWB file
@@ -217,7 +224,13 @@ def convert_session_to_nwb(
         lab="Suver Lab",
         experimenter=["Suver, Marie"],
         subject=subject,
+        keywords=["Drosophila", "patch clamp", "video", "DeepLabCut"],
     )
+
+    nwbfile_path = output_dir / f"{session_id}_experiment{experiment_number}.nwb"
+    # Check if file exists and handle overwrite
+    if nwbfile_path.exists() and not overwrite:
+        raise FileExistsError(f"File {nwbfile_path} already exists. Set overwrite=True to overwrite.")
 
     # Create device with detailed information from the email
     device = nwbfile.create_device(
@@ -234,7 +247,6 @@ def convert_session_to_nwb(
     
     # Default seal value
     seal_value = "TBD"
-    
     # Look for seal test 15 to get the seal resistance
     for seal_test_file in seal_test_files:
         seal_test_num = seal_test_file.stem.split('_')[-1]
@@ -264,10 +276,10 @@ def convert_session_to_nwb(
         device=device,
         slice="Drosophila brain",  # Information about the slice preparation
         seal=seal_value,  # Seal resistance from seal test 15
+        cell_id="TBD",
     )
 
     # Now process all seal tests to add them to the NWB file
-    
     for seal_test_file in seal_test_files:
         # Extract seal test number from filename
         seal_test_num = seal_test_file.stem.split('_')[-1]
@@ -488,12 +500,6 @@ def convert_session_to_nwb(
             video_interface.add_to_nwbfile(nwbfile=nwbfile)
 
     # Save the NWB file
-    nwbfile_path = output_dir / f"{session_id}_experiment{experiment_number}.nwb"
-
-    # Check if file exists and handle overwrite
-    if nwbfile_path.exists() and not overwrite:
-        raise FileExistsError(f"File {nwbfile_path} already exists. Set overwrite=True to overwrite.")
-
     configure_and_write_nwbfile(nwbfile=nwbfile, nwbfile_path=nwbfile_path)
 
     # Print conversion time
