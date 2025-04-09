@@ -1,15 +1,11 @@
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 from neuroconv.tools.nwb_helpers import get_default_backend_configuration, configure_and_write_nwbfile
 from neuroconv.utils import load_dict_from_file
 from neuroconv.datainterfaces import VideoInterface, ScanImageImagingInterface
 from neuroconv import ConverterPipe
-from pynwb import NWBFile, TimeSeries
-from pynwb.file import Subject
 from pymatreader import read_mat
-from pynwb.device import Device
 
 from kim_lab_to_nwb.ophys import KimLabROIInterface
 from kim_lab_to_nwb.stimuli import KimLabStimuliInterface
