@@ -143,9 +143,13 @@ To run this conversion, you can import the conversion function and call it with 
 from kim_lab_to_nwb.kim_conversion import convert_session_to_nwb
 ```
 
-### Suver Lab Conversion (Marie Suver Lab, Vanderbilt University)
+### Suver Lab Conversions (Marie Suver Lab, Vanderbilt University)
 
-The Suver Lab conversion processes session data from experiments studying Drosophila flight control and sensory integration. It captures:
+The Suver Lab has two main types of data conversions:
+
+#### 1. Electrophysiology Conversion
+
+This conversion processes session data from experiments studying Drosophila flight control and sensory integration with patch clamp recordings. It captures:
 
 - In-vivo whole-cell patch clamp recordings (current and voltage)
 - Filtered membrane potential recordings
@@ -156,13 +160,77 @@ The Suver Lab conversion processes session data from experiments studying Drosop
 - Seal test data with calculated metrics (input resistance, access resistance)
 - Subject metadata (genotype, age, sex)
 
-Conversion script: [suver_conversion.py](src/suver_lab_to_nwb/suver_conversion.py)
+Conversion script: [ephys_conversion.py](src/suver_lab_to_nwb/ephys_conversion.py)
 
 To run this conversion, you can import the conversion function and call it with the appropriate parameters:
 
 ```python
 # Import the conversion function
-from suver_lab_to_nwb.suver_conversion import convert_session_to_nwb
+from suver_lab_to_nwb.ephys_conversion import convert_session_to_nwb
+```
+
+#### 2. Behavioral Experiments
+
+The Suver Lab has several behavioral experiment conversions that capture different aspects of Drosophila flight behavior:
+
+##### WindySteps Experiment
+
+This conversion processes behavioral data from the WindySteps experiment, where flies experience airflow trials with increasing or decreasing wind speeds. It captures:
+
+- Tachometer data for detecting wing flapping/flight
+- Smoothed tachometer signal for improved analysis
+- Puffer stimulus data (air puff sensory stimulus)
+- Trial information with stimulus type (ascending/descending)
+- Support for DeepLabCut pose estimation data (when available)
+- Subject metadata (condition, age)
+
+Conversion script: [windy_steps_conversion.py](src/suver_lab_to_nwb/windy_steps_conversion.py)
+
+To run this conversion, you can import the conversion function and call it with the appropriate parameters:
+
+```python
+# Import the conversion function
+from suver_lab_to_nwb.windy_steps_conversion import convert_windy_steps_to_nwb
+```
+
+##### SpeedyBars Experiment
+
+This conversion processes behavioral data from the SpeedyBars experiment, where flies experience optic flow trials at various speeds. It captures:
+
+- Tachometer data for detecting wing flapping/flight
+- Photodiode signal for tracking visual stimuli
+- Puffer stimulus data (air puff sensory stimulus)
+- Trial information with stimulus speed
+- Support for DeepLabCut pose estimation data (when available)
+- Subject metadata (condition, age)
+
+Conversion script: [speedy_bars_conversion.py](src/suver_lab_to_nwb/speedy_bars_conversion.py)
+
+To run this conversion, you can import the conversion function and call it with the appropriate parameters:
+
+```python
+# Import the conversion function
+from suver_lab_to_nwb.speedy_bars_conversion import convert_speedy_bars_to_nwb
+```
+
+##### Coco Experiment
+
+This conversion processes behavioral data from the Coco experiment, where flies experience trials at different oscillatory frequencies with varying windspeeds and optic flow speeds. It captures:
+
+- Tachometer data for detecting wing flapping/flight
+- Photodiode signal for tracking visual stimuli
+- Puffer stimulus data (air puff sensory stimulus)
+- Trial information with block, block trial, and stimulus frequency
+- Support for DeepLabCut pose estimation data (when available)
+- Subject metadata (condition, age)
+
+Conversion script: [coco_conversion.py](src/suver_lab_to_nwb/coco_conversion.py)
+
+To run this conversion, you can import the conversion function and call it with the appropriate parameters:
+
+```python
+# Import the conversion function
+from suver_lab_to_nwb.coco_conversion import convert_coco_to_nwb
 ```
 
 ## Repository Structure
@@ -202,9 +270,13 @@ cohen-u01-to-nwb/
     │   ├── stimuli.py              # Visual stimuli data processing
     │   ├── trials.py               # Trial data processing
     │   └── utils.py                # Utility functions for Kim lab conversions
-    └── suver_lab_to_nwb/           # Marie Suver Lab (University of Washington)
-    │   ├── conversion_notes.md     # Documentation of data structure
-    │   └── suver_conversion.py     # Main conversion script for Suver lab data
+    └── suver_lab_to_nwb/           # Marie Suver Lab (Vanderbilt University)
+        ├── assets/                 # MATLAB scripts and data files
+        ├── conversion_notes.md     # Documentation of data structure
+        ├── coco_conversion.py      # Conversion script for Coco behavioral data
+        ├── ephys_conversion.py     # Conversion script for electrophysiology data
+        ├── speedy_bars_conversion.py # Conversion script for SpeedyBars behavioral data
+        └── windy_steps_conversion.py # Conversion script for WindySteps behavioral data
 ```
 
 Each lab directory contains:
