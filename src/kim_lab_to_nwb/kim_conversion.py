@@ -3,11 +3,11 @@ from pathlib import Path
 
 from neuroconv.tools.nwb_helpers import get_default_backend_configuration, configure_and_write_nwbfile
 from neuroconv.utils import load_dict_from_file
-from neuroconv.datainterfaces import VideoInterface, ScanImageImagingInterface
+from neuroconv.datainterfaces import VideoInterface
 from neuroconv import ConverterPipe
 from pymatreader import read_mat
 
-from kim_lab_to_nwb.ophys import KimLabROIInterface
+from kim_lab_to_nwb.ophys import KimLabROIInterface, ScanImageConverter
 from kim_lab_to_nwb.stimuli import KimLabStimuliInterface
 from kim_lab_to_nwb.trials import KimLabTrialsInterface
 from kim_lab_to_nwb.behavior import BehaviorInterface
@@ -20,7 +20,7 @@ def convert_session_to_nwb(
     experiment_info_file_path: str | Path,
     output_dir: str | Path,
     video_file_path: str | Path = None,
-    tiff_folder_path: str | Path = None,
+    tiff_file_path: str | Path = None,
     df_f_file_path: str | Path = None,
     roi_info_file_path: str | Path = None,
     visual_stimuli_file_path: str | Path = None,
@@ -51,9 +51,8 @@ def convert_session_to_nwb(
         Directory where the NWB file will be saved
     video_file_path : str or Path, optional
         Path to the video file recording fly behavior
-    tiff_folder_path : str or Path, optional
-        Path to the folder containing TIFF files from ScanImage acquisition.
-        These are two-photon microscopy images from a self-made microscope.
+    tiff_file_path : str or Path, optional
+        Path to the first tiff in a series of tiffs containing two-photon images.
     df_f_file_path : str or Path, optional
         Path to the df_f.mat file containing fluorescence traces (ΔF/F) for each ROI.
         Shape is typically (num_rois, num_timepoints).
@@ -106,7 +105,7 @@ def convert_session_to_nwb(
     
     # Convert optional paths to Path objects if provided
     video_file_path = Path(video_file_path) if video_file_path is not None else None
-    tiff_folder_path = Path(tiff_folder_path) if tiff_folder_path is not None else None
+    tiff_file_path = Path(tiff_file_path) if tiff_file_path is not None else None
     df_f_file_path = Path(df_f_file_path) if df_f_file_path is not None else None
     roi_info_file_path = Path(roi_info_file_path) if roi_info_file_path is not None else None
     visual_stimuli_file_path = Path(visual_stimuli_file_path) if visual_stimuli_file_path is not None else None
@@ -144,27 +143,16 @@ def convert_session_to_nwb(
     }
     
     # Set up imaging interfaces if tiff folder is provided
-    if tiff_folder_path is not None:
-        tiff_file_path = tiff_folder_path / f"{session_id}_00001.tif"
-        # Set up the imaging interfaces for two channels
-        scan_image_interface_channel_1 = ScanImageImagingInterface(
-            file_path=tiff_file_path,
-            channel_name="Channel 1",
-        )
-
-        # scan_image_interface_channel_2 = ScanImageImagingInterface(
-        #     file_path=tiff_file_path,
-        #     channel_name="Channel 2",
-        # )
-
-        num_frames = scan_image_interface_channel_1.imaging_extractor.get_num_frames()
-        two_photon_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.two_photon_frame_sync, 0.5)]
-        scan_image_interface_channel_1.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[:num_frames])
-#        scan_image_interface_channel_2.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[:num_frames])
+    if tiff_file_path is not None:
         
-        data_interfaces["imaging_channel_1"] = scan_image_interface_channel_1
- #       data_interfaces["imaging_channel_2"] = scan_image_interface_channel_2
-
+        scan_image_converter = ScanImageConverter(file_path=tiff_file_path)
+        for data_interface_name, data_interface in scan_image_converter.data_interface_objects.items():
+            num_frames  = data_interface.imaging_extractor.get_num_samples()
+            two_photon_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.two_photon_frame_sync, 0.5)]
+            data_interface.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[:num_frames])
+        
+        data_interfaces["imaging"] = scan_image_converter
+        
     # Set up ROI interface if df_f_file_path and roi_info_file_path are provided
     if df_f_file_path is not None and roi_info_file_path is not None:
         roi_interface = KimLabROIInterface(
@@ -255,7 +243,7 @@ if __name__ == "__main__":
     
     # Define optional input paths (set to None if not available)
     video_file_path = data_folder_path / "20250301b_00007.avi"  # Behavior video recording
-    tiff_folder_path = data_folder_path  # Contains tiff files like 20250301b_00007_00001.tif
+    tiff_file_path = data_folder_path / "20250301b_00007_00001.tif"  # First tiff in the series
     visual_stimuli_file_path = data_folder_path / "visual_stimuli.mat"  # Visual stimuli presented to the fly
     trial_data_file_path = data_folder_path / "trial.mat"  # Trial information
     condition_data_file_path = data_folder_path / "condition.mat"  # Condition information for each trial
@@ -274,7 +262,7 @@ if __name__ == "__main__":
         
         # Optional parameters (available for this dataset)
         video_file_path=video_file_path,
-        tiff_folder_path=tiff_folder_path,
+        tiff_file_path=tiff_file_path,
         visual_stimuli_file_path=visual_stimuli_file_path,
         trial_data_file_path=trial_data_file_path,
         condition_data_file_path=condition_data_file_path,
