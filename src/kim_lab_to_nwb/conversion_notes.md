@@ -134,3 +134,9 @@ Do you have a description of patterns
 
 what is each pattern? is this an image array?
 They are the ones from visual stimuli.
+
+## How to visualize imaging data
+
+```bash
+neurosift view-nwb test.nwb 
+```
