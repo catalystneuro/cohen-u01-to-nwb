@@ -148,9 +148,9 @@ def convert_session_to_nwb(
         for data_interface_name, data_interface in scan_image_converter.data_interface_objects.items():
             frame_indices = data_interface.imaging_extractor._get_frame_indices()
             frame_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.two_photon_frame_sync, 0.5)]
-            two_photon_timestamps = frame_timestamps[frame_indices]
-            data_interface.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps)
-        
+            aligned_two_photon_timestamps = frame_timestamps[frame_indices]
+            data_interface.set_aligned_timestamps(aligned_timestamps=aligned_two_photon_timestamps)
+
         data_interfaces["imaging"] = scan_image_converter
         
     # Set up ROI interface if df_f_file_path and roi_info_file_path are provided
