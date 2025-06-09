@@ -1,7 +1,6 @@
 from datetime import datetime
 from pathlib import Path
 
-from neuroconv.tools.nwb_helpers import get_default_backend_configuration, configure_and_write_nwbfile
 from neuroconv.utils import load_dict_from_file
 from neuroconv.datainterfaces import VideoInterface
 from neuroconv import ConverterPipe
@@ -147,9 +146,10 @@ def convert_session_to_nwb(
         
         scan_image_converter = ScanImageConverter(file_path=tiff_file_path)
         for data_interface_name, data_interface in scan_image_converter.data_interface_objects.items():
-            num_frames  = data_interface.imaging_extractor.get_num_samples()
-            two_photon_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.two_photon_frame_sync, 0.5)]
-            data_interface.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[:num_frames])
+            frame_indices = data_interface.imaging_extractor._get_frame_indices()
+            frame_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.two_photon_frame_sync, 0.5)]
+            two_photon_timestamps = frame_timestamps[frame_indices]
+            data_interface.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[frame_indices])
         
         data_interfaces["imaging"] = scan_image_converter
         
