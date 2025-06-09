@@ -14,15 +14,16 @@ classifiers = [
 ]
 
 dependencies = [
-  "neuroconv[video]>=0.7.2",
-  "roiextractors>=0.5.11",
+  "neuroconv[video]>=0.7.4",
+  "roiextractors>=0.5.13",
   "ndx-pose>=0.2.1",
-  "tifffile",  # For reading tiffs
+  "tifffile", # For reading tiffs
   "pymatreader", # For reading matlab (most conversions
   "scikit-image", # for the Kim lab conversion polygon mask
   "lxml", # For Dickerson lab conversion
   "czifile", # for the Cohen lab conversion confocal images
-  "pynwb>=3.0.0", 
+  "pynwb>=3.0.0",
+  "natsort>=8.4.0",
 ]
 
 [project.urls]
