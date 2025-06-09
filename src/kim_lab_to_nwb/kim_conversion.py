@@ -149,7 +149,7 @@ def convert_session_to_nwb(
             frame_indices = data_interface.imaging_extractor._get_frame_indices()
             frame_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.two_photon_frame_sync, 0.5)]
             two_photon_timestamps = frame_timestamps[frame_indices]
-            data_interface.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps[frame_indices])
+            data_interface.set_aligned_timestamps(aligned_timestamps=two_photon_timestamps)
         
         data_interfaces["imaging"] = scan_image_converter
         
