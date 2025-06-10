@@ -194,7 +194,7 @@ class KIMScanImageImagingExtractor(ScanImageImagingExtractor):
             # equal to the number of IFDs in the previous files
             file_offset = sum(self._ifds_per_file[:file_index]) if file_index > 0 else 0
 
-            frame_indices[sample_index] = ifd_index + file_offset
+            frame_indices[sample_index] = int(ifd_index) + file_offset
 
         return frame_indices
 
@@ -320,6 +320,7 @@ class KimScanImageImagingInterface(BaseImagingExtractorInterface):
                     )
 
                 if origin_coords is not None:
+                    origin_coords = [float(x) for x in origin_coords]
                     imaging_plane_metadata.update(origin_coords=origin_coords, origin_coords_unit=origin_coords_unit)
 
         return metadata

@@ -47,7 +47,7 @@ class BehaviorInterface(BaseDataInterface):
         self.y_position = nidq_device_data[4]
         self.two_photon_frame_sync = nidq_device_data[5]
         self.behavior_camera_sync = nidq_device_data[6]
-        self.stimulus_start = nidq_device_data[7]
+        self.stimulus_start = nidq_device_data[7] if len(nidq_device_data) > 7 else None
         
         # Store protocol information
         self.protocol = mat_data.get("protocol", "unknown")

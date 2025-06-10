@@ -143,11 +143,13 @@ def convert_session_to_nwb(
     
     # Set up imaging interfaces if tiff folder is provided
     if tiff_file_path is not None:
-        
+        signal_over_threshold = behavior_interface.two_photon_frame_sync >= 0.5
+        frame_timestamps = behavior_interface.timestamps[signal_over_threshold]
+
         scan_image_converter = ScanImageConverter(file_path=tiff_file_path)
         for data_interface_name, data_interface in scan_image_converter.data_interface_objects.items():
-            frame_indices = data_interface.imaging_extractor._get_frame_indices()
-            frame_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.two_photon_frame_sync, 0.5)]
+            imaging_extractor = data_interface.imaging_extractor
+            frame_indices = imaging_extractor._get_frame_indices()
             aligned_two_photon_timestamps = frame_timestamps[frame_indices]
             data_interface.set_aligned_timestamps(aligned_timestamps=aligned_two_photon_timestamps)
 
@@ -187,8 +189,9 @@ def convert_session_to_nwb(
     # Set up video interface if video_file_path is provided
     if video_file_path is not None:
         video_interface = VideoInterface(file_paths=[video_file_path])
-        video_timestamps = behavior_interface.timestamps[detect_threshold_crossings(behavior_interface.behavior_camera_sync, 0.5)]
-        video_interface.set_aligned_timestamps([video_timestamps])
+        signal_over_threshold = behavior_interface.behavior_camera_sync >= 0.5
+        aligned_video_timestamps = behavior_interface.timestamps[signal_over_threshold]
+        video_interface.set_aligned_timestamps([aligned_video_timestamps])
         data_interfaces["video"] = video_interface
 
     converter_pipe = ConverterPipe(data_interfaces=data_interfaces)
@@ -232,16 +235,11 @@ def convert_session_to_nwb(
 
 
 if __name__ == "__main__":
-    # Example usage with the actual paths
+    
     data_folder_path = Path("/home/heberto/cohen_project/Sample data/Kim Lab/20250301b")
     
-    # Define required input paths
     matlab_data_file_path = data_folder_path / "data_20250301b_00007.mat"
-    experiment_info_file_path = data_folder_path / "exp_info.mat"
-    # Modify this to your desired output directory
-    output_dir = Path("/home/heberto/cohen_project/Sample data/Kim Lab/nwb")
-    
-    # Define optional input paths (set to None if not available)
+    experiment_info_file_path = data_folder_path / "exp_info.mat"    
     video_file_path = data_folder_path / "20250301b_00007.avi"  # Behavior video recording
     tiff_file_path = data_folder_path / "20250301b_00007_00001.tif"  # First tiff in the series
     visual_stimuli_file_path = data_folder_path / "visual_stimuli.mat"  # Visual stimuli presented to the fly
@@ -252,6 +250,23 @@ if __name__ == "__main__":
     df_f_file_path = None  # No fluorescence traces available
     roi_info_file_path = None  # No ROI information available
 
+    
+    data_folder_path = Path("/home/heberto/cohen_project/Sample data/Kim Lab/20250228a")
+    
+    matlab_data_file_path = data_folder_path / "data_20250228a_00004.mat"
+    experiment_info_file_path = data_folder_path / "exp_info.mat"   
+    video_file_path = data_folder_path / "20250228a_00004.avi"
+    tiff_file_path = data_folder_path / "20250228a_00004_00001.tif"  # First tiff in the series
+    visual_stimuli_file_path = None # data_folder_path / "visual_stimuli.mat"  # Visual stimuli presented to the fly
+
+    # These files are not available for this dataset
+    trial_data_file_path = None 
+    condition_data_file_path = None
+    df_f_file_path = None  # No fluorescence traces available
+    roi_info_file_path = None  # No ROI information available
+    
+    
+    output_dir = Path("/home/heberto/cohen_project/Sample data/Kim Lab/nwb")
     output_dir.mkdir(exist_ok=True, parents=True)
 
     nwbfile_path = convert_session_to_nwb(
