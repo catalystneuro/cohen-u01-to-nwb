@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 from neuroconv.utils import load_dict_from_file
 from neuroconv.datainterfaces import VideoInterface
 from neuroconv import ConverterPipe
@@ -10,7 +11,6 @@ from kim_lab_to_nwb.ophys import KimLabROIInterface, ScanImageConverter
 from kim_lab_to_nwb.stimuli import KimLabStimuliInterface
 from kim_lab_to_nwb.trials import KimLabTrialsInterface
 from kim_lab_to_nwb.behavior import BehaviorInterface
-from kim_lab_to_nwb.utils import detect_threshold_crossings
 from zoneinfo import ZoneInfo
 
 
@@ -143,14 +143,39 @@ def convert_session_to_nwb(
     
     # Set up imaging interfaces if tiff folder is provided
     if tiff_file_path is not None:
-        signal_over_threshold = behavior_interface.two_photon_frame_sync >= 0.5
-        frame_timestamps = behavior_interface.timestamps[signal_over_threshold]
+        sync_signal = behavior_interface.two_photon_frame_sync
+        # Find rising edges: where signal crosses from below 0.5 to above 0.5
+        threshold = 0.5
+        rising_edges = (sync_signal[1:] >= threshold) & (sync_signal[:-1] < threshold)
+
+        # Get timestamps for rising edges (need to account for the shift due to diff)
+        frame_timestamps = behavior_interface.timestamps[1:][rising_edges]
+
 
         scan_image_converter = ScanImageConverter(file_path=tiff_file_path)
+        channel_names = scan_image_converter.channel_names 
+        number_of_channels = len(channel_names)
         for data_interface_name, data_interface in scan_image_converter.data_interface_objects.items():
             imaging_extractor = data_interface.imaging_extractor
-            frame_indices = imaging_extractor._get_frame_indices()
-            aligned_two_photon_timestamps = frame_timestamps[frame_indices]
+            
+            # Get original frame indices for all samples (these are frame indices of the last plane in each volume)
+            frame_indices = imaging_extractor.get_original_frame_indices()
+            
+            # Adjust because the sync pulse comes once per plane (not once per channel per plane)
+            frame_indices_channel_adjusted = frame_indices // number_of_channels
+            
+            # This is in boolean space so it can be used both in frame space or sample space
+            valid_samples_mask = frame_indices_channel_adjusted < len(frame_timestamps)
+
+            # Check if we need to slice the extractor
+            # This happens when the NIDAQ was turned off before the microscope stopped recording
+            slice_is_needed = not np.all(valid_samples_mask)
+            if slice_is_needed:
+                sliced_extractor = imaging_extractor.slice_to_valid_samples(valid_samples_mask)
+                data_interface.imaging_extractor = sliced_extractor
+            
+            # Get the aligned timestamps by slicing with the same mask
+            aligned_two_photon_timestamps = frame_timestamps[frame_indices_channel_adjusted[valid_samples_mask]]
             data_interface.set_aligned_timestamps(aligned_timestamps=aligned_two_photon_timestamps)
 
         data_interfaces["imaging"] = scan_image_converter
@@ -189,8 +214,12 @@ def convert_session_to_nwb(
     # Set up video interface if video_file_path is provided
     if video_file_path is not None:
         video_interface = VideoInterface(file_paths=[video_file_path])
-        signal_over_threshold = behavior_interface.behavior_camera_sync >= 0.5
-        aligned_video_timestamps = behavior_interface.timestamps[signal_over_threshold]
+        sync_signal = behavior_interface.behavior_camera_sync
+        threshold = 0.5
+        rising_edges = (sync_signal[1:] >= threshold) & (sync_signal[:-1] < threshold)
+
+        # Get timestamps for rising edges (need to account for the shift due to diff)
+        aligned_video_timestamps = behavior_interface.timestamps[1:][rising_edges]
         video_interface.set_aligned_timestamps([aligned_video_timestamps])
         data_interfaces["video"] = video_interface
 

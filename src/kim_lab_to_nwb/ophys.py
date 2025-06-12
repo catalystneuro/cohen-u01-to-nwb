@@ -89,15 +89,15 @@ class ScanImageConverter(ConverterPipe):
         file_path = Path(file_path)
 
         # Get available channels
-        channel_names = self.get_available_channel_names(file_path=file_path)
+        self.channel_names = self.get_available_channel_names(file_path=file_path)
         self.photon_series_type = photon_series_type
-        if not channel_names:
+        if not self.channel_names:
             raise ValueError(f"No channels found in ScanImage file: {file_path}")
 
         # Create interfaces for each channel
         data_interfaces = {}
         self.interface_channels = {}
-        for channel_name in channel_names:
+        for channel_name in self.channel_names:
             interface_name = f"ScanImage{channel_name.replace(' ', '').capitalize()}ImagingInterface"
             interface = KimScanImageImagingInterface(
                 file_path=file_path,
@@ -147,7 +147,7 @@ class ScanImageConverter(ConverterPipe):
             photon_series_index = interface_name_to_photon_series_index[interface_name]
             conversion_options[interface_name]["photon_series_index"] = photon_series_index
 
-        return super().add_to_nwbfile(nwbfile, metadata, conversion_options)
+        return super().add_to_nwbfile(nwbfile=nwbfile, metadata=metadata, conversion_options=conversion_options)
 
 
 class KIMScanImageImagingExtractor(ScanImageImagingExtractor):
@@ -156,26 +156,91 @@ class KIMScanImageImagingExtractor(ScanImageImagingExtractor):
     and provide a method to get the frame indices that are selected for a specific channel.
     """
     
-    def _get_frame_indices(self, plane_index: Optional[int] = None) -> np.ndarray:
+    def slice_to_valid_samples(self, valid_samples_mask: np.ndarray):
         """
-        For each sample it gets a frame within a given volume that is selected as 
-        representative of the sample.
+        Slice the extractor to only include valid samples.
         
-        By default, it uses the last frame in the volume sample but this can be changed
-        by providing a `plane_index` argument.
+        This method encapsulates the slicing operation while preserving metadata.
+        Typically used when the NIDAQ was turned off before the microscope stopped recording,
+        leaving some imaging samples without corresponding sync pulses.
+        
+        Parameters
+        ----------
+        valid_samples_mask : np.ndarray
+            Boolean mask indicating which samples are valid
+            
+        Returns
+        -------
+        KIMScanImageImagingExtractor
+            A sliced extractor containing only valid samples
+        """
+        # Get the last valid sample index
+        last_valid_sample_index = np.where(valid_samples_mask)[0][-1]
+        
+        # Slice the imaging extractor to only include samples with sync pulses
+        sliced_extractor = self.slice_samples(
+            start_sample=0,
+            end_sample=last_valid_sample_index + 1  # +1 because end_sample is exclusive
+        )
+        
+        # Preserve file path and metadata
+        sliced_extractor.file_path = self.file_path
+        if hasattr(self, '_general_metadata'):
+            sliced_extractor._general_metadata = self._general_metadata
+        
+        return sliced_extractor
+    
+    def get_original_frame_indices(self, plane_index: Optional[int] = None) -> np.ndarray:
+        """
+        Get the original frame indices for each sample.
+
+        Returns the index of the original frame for each sample, mapping processed samples
+        back to their corresponding frames in the raw microscopy data. This accounts for
+        any filtering, subsampling, or exclusions (such as flyback frames) performed by
+        the extractor.
+
+        Parameters
+        ----------
+        plane_index : int, optional
+            Which plane to use for frame index calculation in volumetric data.
+            If None, plane_index is set to the last plane in the volume. This is because the timestamp of the acquisition of the last plane in a volume is typically set as the timestamp of the volume as a whole. It must be less than the total number of planes.
 
         Returns
         -------
         np.ndarray
-            Array of selected frame indices.
+            Array of original frame indices (dtype: int64) with length equal to the
+            number of samples. Each element represents the index of the original
+            microscopy frame that corresponds to that sample.
+
+        Notes
+        -----
+        **Frame Index Calculation:**
+
+        - **Planar data**: Frame indices are sequential (0, 1, 2, ...)
+        - **Multi-channel data**: Accounts for channel interleaving
+        - **Volumetric data**: Uses the specified plane (default: last plane)
+        - **Multi-file data**: Includes file offsets for global indexing
+        - **Flyback frames**: Automatically excluded from indexing
+
+        **Common Use Cases:**
+
+        - Synchronizing with external timing systems
+        - Mapping back to original acquisition timestamps
+        - Data provenance and traceability
+        - Cross-referencing with raw data files
+
+        **Examples:**
+
+        For a 3-sample volumetric dataset with 5 planes per volume:
+        - Default behavior returns indices [4, 9, 14] (last plane of each volumetric sample)
+        - With plane_index=0 returns indices [0, 5, 10] (first plane of each volumetric sample)
         """
         num_planes = self.get_num_planes()
-
         if plane_index is not None:
             assert plane_index < num_planes, f"Plane index {plane_index} exceeds number of planes {num_planes}."
         else:
             plane_index = num_planes - 1
-        
+
         # Initialize array to store timestamps
         num_samples = self.get_num_samples()
         frame_indices = np.zeros(num_samples, dtype=np.int64)
@@ -186,17 +251,18 @@ class KIMScanImageImagingExtractor(ScanImageImagingExtractor):
             # Get the last frame in this sample to get the timestamps
             frame_index = sample_index * num_planes + plane_index
             table_row = self._frames_to_ifd_table[frame_index]
-            
-            file_index = table_row["file_index"]
-            ifd_index = table_row["IFD_index"]
-            
+
+            file_index = int(table_row["file_index"])
+            ifd_index = int(table_row["IFD_index"])
+
             # The ifds are local within a file, so we need to add and offset
             # equal to the number of IFDs in the previous files
             file_offset = sum(self._ifds_per_file[:file_index]) if file_index > 0 else 0
 
-            frame_indices[sample_index] = int(ifd_index) + file_offset
+            frame_indices[sample_index] = ifd_index + file_offset
 
         return frame_indices
+
 
 class KimScanImageImagingInterface(BaseImagingExtractorInterface):
 
