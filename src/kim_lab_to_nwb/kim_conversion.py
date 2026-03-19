@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 from neuroconv.utils import load_dict_from_file
-from neuroconv.datainterfaces import VideoInterface
+from neuroconv.datainterfaces import ExternalVideoInterface
 from neuroconv import ConverterPipe
 from pymatreader import read_mat
 
@@ -213,7 +213,7 @@ def convert_session_to_nwb(
 
     # Set up video interface if video_file_path is provided
     if video_file_path is not None:
-        video_interface = VideoInterface(file_paths=[video_file_path])
+        video_interface = ExternalVideoInterface(file_paths=[video_file_path])
         sync_signal = behavior_interface.behavior_camera_sync
         threshold = 0.5
         rising_edges = (sync_signal[1:] >= threshold) & (sync_signal[:-1] < threshold)

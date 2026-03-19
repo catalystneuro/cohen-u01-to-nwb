@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [{ name = "CatalystNeuro", email = "ben.dichter@catalystneuro.com" }]
 maintainers = [{ name = "CatalystNeuro", email = "ben.dichter@catalystneuro.com" }]
 license = { file = "LICENSE" }
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -14,7 +14,7 @@ classifiers = [
 ]
 
 dependencies = [
-  "neuroconv[video]>=0.7.4",
+  "neuroconv[video]>=0.8.3",
   "roiextractors>=0.5.13",
   "ndx-pose>=0.2.1",
   "tifffile", # For reading tiffs

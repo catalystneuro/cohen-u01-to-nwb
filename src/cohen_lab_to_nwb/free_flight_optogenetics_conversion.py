@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 from pymatreader import read_mat
-from neuroconv.datainterfaces import VideoInterface
+from neuroconv.datainterfaces import ExternalVideoInterface
 from tqdm import tqdm
 from pynwb import NWBFile
 from pynwb.behavior import SpatialSeries
@@ -155,7 +155,7 @@ def convert_stimuli_experiment_to_nwb(
         # Add the video data
         video_file_path = video_folder_path / f"Expr_43_movie_{video_number_xxx_format}.mp4"
         assert video_file_path.is_file(), f"Video file not found at {video_file_path}"
-        video_interface = VideoInterface(file_paths=[video_file_path])
+        video_interface = ExternalVideoInterface(file_paths=[video_file_path])
 
         # Add the video interface to the NWB file
         video_interface.add_to_nwbfile(nwbfile=nwbfile)

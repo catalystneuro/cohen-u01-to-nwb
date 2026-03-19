@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import parse
 from neuroconv.utils import dict_deep_update, load_dict_from_file
 from neuroconv import ConverterPipe
-from neuroconv.datainterfaces import DeepLabCutInterface, VideoInterface
+from neuroconv.datainterfaces import DeepLabCutInterface, ExternalVideoInterface
 import numpy as np 
 
 from fox_lab_to_nwb.behavior import BehaviorInterface
@@ -54,7 +54,7 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
     ##################
     side_cam_name = "SideCam_000000.avi"
     file_path = trial_folder_path / side_cam_name
-    side_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="SideCam")
+    side_cam_interface = ExternalVideoInterface(file_paths=[file_path], metadata_key_name="SideCam")
     
     fastec_metadata_file_path = trial_folder_path / f"{file_path.stem}.txt"
     fastec_metadata = extract_fastec_metadata(fastec_metadata_file_path)
@@ -78,7 +78,7 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
     # For TopCam (similar to SideCam)
     top_cam_name = "TOPCAM_000000.avi"
     file_path = trial_folder_path / top_cam_name
-    top_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="TopCam")
+    top_cam_interface = ExternalVideoInterface(file_paths=[file_path], metadata_key_name="TopCam")
 
     fastec_metadata_file_path = trial_folder_path / f"{file_path.stem}.txt"
     fastec_metadata = extract_fastec_metadata(fastec_metadata_file_path)
@@ -102,7 +102,7 @@ def run_trial_conversion(trial_folder_path: Path, output_dir_path: Optional[Path
 
     haltere_camera_name = "XZ_1_186.mp4"
     file_path = trial_folder_path / haltere_camera_name
-    haltere_cam_interface = VideoInterface(file_paths=[file_path], metadata_key_name="HaltereCam")
+    haltere_cam_interface = ExternalVideoInterface(file_paths=[file_path], metadata_key_name="HaltereCam")
     
     phantom_metadata_file_path = trial_folder_path / "XZ_1_186.xml" 
     phantom_metadata = extract_phantom_metadata(phantom_metadata_file_path)
