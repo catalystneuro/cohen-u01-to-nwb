@@ -89,7 +89,7 @@ def convert_confocal_to_nwb(
 
     # Save the NWB file
     nwbfile_path = output_dir / f"{file_path.stem}.nwb"
-    configure_and_write_nwbfile(nwbfile=nwbfile, output_filepath=nwbfile_path)
+    configure_and_write_nwbfile(nwbfile=nwbfile, nwbfile_path=nwbfile_path)
 
     if verbose:
         print(f"\nCreated NWB file: {nwbfile_path}")
