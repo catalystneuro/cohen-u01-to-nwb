@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 from neuroconv.basedatainterface import BaseDataInterface
-from neuroconv.utils import FilePathType, DeepDict
+from neuroconv.utils import DeepDict
 from pynwb import NWBFile
 from pynwb.file import TimeSeries
 from pynwb.device import Device
@@ -15,7 +15,7 @@ class BehaviorInterface(BaseDataInterface):
 
     def __init__(
         self,
-        file_path: FilePathType,
+        file_path: str | Path,
         verbose: bool = False,
     ):
         """Initialize the behavior interface.

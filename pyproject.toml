@@ -14,7 +14,7 @@ classifiers = [
 ]
 
 dependencies = [
-  "neuroconv[video]>=0.8.3",
+  "neuroconv[video]>=0.8.3,<0.10.0",
   "roiextractors>=0.5.13",
   "ndx-pose>=0.2.1",
   "tifffile", # For reading tiffs

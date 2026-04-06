@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 from neuroconv.basedatainterface import BaseDataInterface
-from neuroconv.utils import FilePathType, DeepDict
+from neuroconv.utils import DeepDict
 from pynwb import NWBFile
 from pymatreader import read_mat
 
@@ -13,8 +13,8 @@ class KimLabTrialsInterface(BaseDataInterface):
 
     def __init__(
         self,
-        trial_data_file_path: FilePathType,
-        condition_data_file_path: FilePathType,
+        trial_data_file_path: str | Path,
+        condition_data_file_path: str | Path,
         timestamps: np.ndarray,
         stimuli_blocks: int = 10.0,
         verbose: bool = False,
@@ -23,9 +23,9 @@ class KimLabTrialsInterface(BaseDataInterface):
 
         Parameters
         ----------
-        trial_data_file_path : FilePathType
+        trial_data_file_path : str | Path
             Path to the file containing trial data
-        condition_data_file_path : FilePathType
+        condition_data_file_path : str | Path
             Path to the file containing condition data
         timestamps : np.ndarray
             Timestamps for the trial data. This is used to synchronize the

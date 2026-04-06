@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 from neuroconv.basedatainterface import BaseDataInterface
-from neuroconv.utils import FilePathType, DeepDict
+from neuroconv.utils import DeepDict
 from pynwb import NWBFile
 from pynwb.image import ImageSeries
 from pymatreader import read_mat
@@ -14,7 +14,7 @@ class KimLabStimuliInterface(BaseDataInterface):
 
     def __init__(
         self,
-        file_path: FilePathType,
+        file_path: str | Path,
         timestamps: np.ndarray,
         verbose: bool = False,
     ):
@@ -22,7 +22,7 @@ class KimLabStimuliInterface(BaseDataInterface):
 
         Parameters
         ----------
-        file_path : FilePathType
+        file_path : str | Path
             Path to the visual_stimuli.mat file
         timestamps : np.ndarray
             Timestamps for the visual stimuli. This is usedd to synchronize the

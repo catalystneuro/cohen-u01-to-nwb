@@ -171,8 +171,11 @@ def convert_session_to_nwb(
             # This happens when the NIDAQ was turned off before the microscope stopped recording
             slice_is_needed = not np.all(valid_samples_mask)
             if slice_is_needed:
-                sliced_extractor = imaging_extractor.slice_to_valid_samples(valid_samples_mask)
-                data_interface.imaging_extractor = sliced_extractor
+                last_valid_sample_index = np.where(valid_samples_mask)[0][-1]
+                data_interface.imaging_extractor = imaging_extractor.slice_samples(
+                    start_sample=0,
+                    end_sample=last_valid_sample_index + 1,
+                )
             
             # Get the aligned timestamps by slicing with the same mask
             aligned_two_photon_timestamps = frame_timestamps[frame_indices_channel_adjusted[valid_samples_mask]]
